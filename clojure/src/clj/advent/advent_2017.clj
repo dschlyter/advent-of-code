@@ -132,16 +132,15 @@
 (defn register-seq [registers]
   (iterate realloc-cycle registers))
 
-(defn realloc-states [registers state-set]
-  (let [next-registers (realloc-cycle registers)
-        next-state-set (conj state-set next-registers)]
-    (lazy-seq (concat [next-state-set] (realloc-states next-registers next-state-set)))))
+(defn state-set-seq [registers]
+  (drop 2
+        (reductions conj #{} (register-seq registers))))
 
 (defn repeat-count [registers]
   (first
     (first
       (drop-while (fn [[i s]] (= (inc i) (count s)))
-                  (indexed (realloc-states registers #{registers}))))))
+                  (indexed (state-set-seq registers))))))
 
 ; not very opt
 (defn day5-p2 [registers]
@@ -152,4 +151,4 @@
                          (drop (inc rep-count) (register-seq registers)))))))
 
 ; (p (repeat-count (int-vec day5-p1-input)))
-(p (day5-p2 (int-vec day5-p1-input)))
+; (p (day5-p2 (int-vec day5-p1-input)))
