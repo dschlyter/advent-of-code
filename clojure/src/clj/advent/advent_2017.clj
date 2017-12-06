@@ -129,6 +129,9 @@
             (mod (inc max-index) (count registers))
             (get registers max-index))))
 
+(defn register-seq [registers]
+  (iterate realloc-cycle registers))
+
 (defn realloc-states [registers state-set]
   (let [next-registers (realloc-cycle registers)
         next-state-set (conj state-set next-registers)]
@@ -140,6 +143,13 @@
       (drop-while (fn [[i s]] (= (inc i) (count s)))
                   (indexed (realloc-states registers #{registers}))))))
 
-(println)
+; not very opt
+(defn day5-p2 [registers]
+  (let [rep-count (repeat-count registers)
+        repeating-register (first (drop rep-count (register-seq registers)))]
+    (inc
+      (count (take-while #(not= repeating-register %)
+                         (drop (inc rep-count) (register-seq registers)))))))
+
 ; (p (repeat-count (int-vec day5-p1-input)))
-(println)
+(p (day5-p2 (int-vec day5-p1-input)))
