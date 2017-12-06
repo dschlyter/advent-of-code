@@ -1,10 +1,13 @@
 (ns advent.advent-2017
     (:require
+      [clojure.java.io :refer [as-file make-parents]]
       [clojure.string :as string]))
 
 (println "loading advent 2017" (.toString (java.time.LocalDateTime/now)))
 
 ; utils
+
+(def p println)
 
 (defn parse-int [s]
       (Integer/parseInt s))
@@ -13,7 +16,20 @@
   (reverse
     (range (inc b) (inc a))))
 
-(neg-range 3 -3)
+(defn zip [seq1 seq2]
+  (map vector seq1 seq2))
+
+(defn cardinal []
+  (iterate inc 1))
+
+(defn indexed [sequence]
+  (zip (cardinal) sequence))
+
+(defn int-vec [str]
+  (->> str
+       (#(string/split % #"\t"))
+       (map parse-int)
+       (into [])))
 
 ; day 1
 
@@ -86,7 +102,44 @@
     (drop-while #(< % 361527)
                 (spiral-values {{:x 0 :y 0} 1} (spiral-path 1)))))
 
+; day 5
+
+(def day5-p1-test-input [0 2 7 0])
+
+(def day5-p1-input "0\t5\t10\t0\t11\t14\t13\t4\t11\t8\t8\t7\t1\t4\t12\t11")
+
+(defn max-item-index [sequence]
+  (get
+    (reduce-kv (fn [[bi bv] i v]
+                 (if (> v bv) [i v] [bi bv]))
+               [-1 -1]
+               sequence)
+    0))
+
+(defn redist [registers index element-count]
+  (cond
+    (<= element-count 0) registers
+    :else (recur (update registers index inc)
+                 (mod (inc index) (count registers))
+                 (dec element-count))))
+
+(defn realloc-cycle [registers]
+  (let [max-index (max-item-index registers)]
+    (redist (assoc registers max-index 0)
+            (mod (inc max-index) (count registers))
+            (get registers max-index))))
+
+(defn realloc-states [registers state-set]
+  (let [next-registers (realloc-cycle registers)
+        next-state-set (conj state-set next-registers)]
+    (lazy-seq (concat [next-state-set] (realloc-states next-registers next-state-set)))))
+
+(defn repeat-count [registers]
+  (first
+    (first
+      (drop-while (fn [[i s]] (= (inc i) (count s)))
+                  (indexed (realloc-states registers #{registers}))))))
 
 (println)
-(println (day3-p2))
+; (p (repeat-count (int-vec day5-p1-input)))
 (println)
