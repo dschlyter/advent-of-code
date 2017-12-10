@@ -9,6 +9,10 @@
 
 ; utils
 
+(defn tap [s fn]
+  (fn s)
+  s)
+
 (defn p [& args]
   (apply println args)
   (first args))
@@ -31,7 +35,7 @@
 
 (defn int-vec [str]
   (->> str
-       (#(string/split % #"\t"))
+       (#(string/split % #"[\t ,]"))
        (map parse-int)
        (into [])))
 
@@ -221,8 +225,6 @@
 (def day8-in (string/split-lines (slurp "input/day8.txt")))
 (def day8-test (string/split-lines (slurp "input/day8-test")))
 
-(p day8-test)
-
 (def registers (atom {}))
 (def register-max (atom (Integer/MIN_VALUE)))
 
@@ -254,7 +256,65 @@
     (swap! register-max #(max % (get-reg reg)))))
 
 
-(doall (map execute day8-in))
-(p @registers)
-(p "largest:" (apply max (vals @registers)))
-(p "largest-during:" @register-max)
+; (doall (map execute day8-in))
+; (p @registers)
+; (p "largest:" (apply max (vals @registers)))
+; (p "largest-during:" @register-max)
+
+; day 9
+
+(defn score [s]
+  (:sum
+    (reduce #(let [cs (:score %1) sum (:sum %1)]
+               (cond
+                 (= %2 \{) {:score (inc cs) :sum (+ sum cs)}
+                 (= %2 \}) {:score (dec cs) :sum sum}
+                 (= %2 \,) %1
+                 :else (do (println "cannot score" %2) %1)))
+            {:score 1 :sum 0}
+            s)))
+
+(def stream-char-count (atom 0))
+
+(defn clean [s]
+  (-> s
+      (string/replace #"!." "")
+      (tap #(reset! stream-char-count (count %1)))
+      (string/replace #"<[^>]*>" "<>")
+      (tap #(println (- @stream-char-count (count %)) "characters cleaned"))
+      (string/replace #"<>" "")))
+
+(def clean-score (comp score clean))
+
+(def day9-in (slurp "input/day9.txt"))
+
+; (p (clean-score "{{<!!>},{<!!>},{<!!>},{<!!>}}"))
+; (p (clean-score "{{<a!>},{<a!>},{<a!>},{<ab>}}"))
+; (p (clean-score day9-in))
+
+; day 10
+
+(defn rotate [n list]
+  (concat (drop n list) (take n list)))
+
+(defn knot [rope len]
+  (let [pos (:pos rope)
+        skip (:skip rope)
+        values (rotate pos (:values rope))]
+    (p len)
+    (p
+      {
+       :values (rotate (- (count values) pos)
+                 (concat (reverse (take len (take len values)))
+                         (drop len values)))
+       :pos    (mod (+ pos len skip) (count values))
+       :skip   (inc skip)})))
+
+(def day10-test (int-vec "3,4,1,5"))
+(def day10-in (int-vec "63,144,180,149,1,255,167,84,125,65,188,0,2,254,229,24"))
+
+(defn day10-p1 []
+  (let [res (:values (reduce knot {:values (range 256) :pos 0 :skip 0} day10-in))]
+   (* (first res) (nth res 1))))
+
+(p (day10-p1))
