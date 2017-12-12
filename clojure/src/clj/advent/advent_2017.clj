@@ -35,9 +35,11 @@
 
 (defn int-vec [str]
   (->> str
-       (#(string/split % #"[\t ,]"))
+       (#(string/split % #"[^0-9]+"))
        (map parse-int)
        (into [])))
+
+(p "")
 
 ; day 1
 
@@ -346,7 +348,7 @@
 
 ; model as a 2d array with the possibility to go diagonally on even/uneven
 
-(defn vec
+(defn point
   ([pair] {:x (get pair 0) :y (get pair 1)})
   ([p1 p2] {:x p1 :y p2}))
 
@@ -361,9 +363,9 @@
               "se" [[1 -1] [1 0]]
               "nw" [[-1 0] [-1 1]]
               "sw" [[-1 -1] [-1 0]]}]
-    (add pos (vec (-> dirs
-                      (get dir)
-                      (get (if (even? (:x pos)) 0 1)))))))
+    (add pos (point (-> dirs
+                        (get dir)
+                        (get (if (even? (:x pos)) 0 1)))))))
 
 
 (defn moves [pos moves-str]
@@ -377,7 +379,7 @@
 (defn dist [p1 p2]
   (let [xdist (Math/abs (- (:x p1) (:x p2)))
         ydist (Math/abs (- (:y p1) (:y p2)))
-        base-dist (+ xdist (- ydist (quot xdist 2)))]
+        base-dist (+ xdist (max 0 (- ydist (quot xdist 2))))]
     (if (not= xdist 1)
       base-dist
       (if (even? (:x p1))
@@ -391,17 +393,43 @@
 (defn moves-dist [pos moves-str]
   (dist pos (moves pos moves-str)))
 
-(p (dist (vec 0 1) (vec 1 1)))
-
-(p (moves-dist (vec 0 0) "ne,ne,ne"))
-(p (moves-dist (vec 0 0) "ne,ne,sw,sw"))
-(p (moves-dist (vec 0 0) "ne,ne,s,s"))
-(p (moves (vec 0 0) "se,sw,se,sw,sw"))
-(p (moves-dist (vec 0 0) "se,sw,se,sw,sw"))
+; (p (moves-dist (vec 0 0) "ne,ne,ne"))
+; (p (moves-dist (vec 0 0) "ne,ne,sw,sw"))
+; (p (moves-dist (vec 0 0) "ne,ne,s,s"))
+; (p (moves (vec 0 0) "se,sw,se,sw,sw"))
+; (p (moves-dist (vec 0 0) "se,sw,se,sw,sw"))
 
 (def day11-in (slurp "input/day11.txt"))
 
-(p (moves-dist (vec 0 0) day11-in))
+; (p (moves-dist (vec 0 0) day11-in))
 
-(p (apply max (map #(dist (vec 0 0) %)
-                   (all-moves (vec 0 0) day11-in))))
+; (p (apply max (map #(dist (vec 0 0) %)
+                   ; (all-moves (vec 0 0) day11-in))))
+
+; day 12
+
+(def day12-test (slurp "input/day12-test"))
+(def day12-in (slurp "input/day12.txt"))
+
+(defn build-nodes [input]
+  (->> input
+       (string/split-lines)
+       (map int-vec)
+       (reduce #(assoc %1 (first %2) (rest %2)) {})))
+
+(defn dfs [state node]
+  (if (not (get (:visited state) node))
+      (let [new-state (update state :visited conj node)]
+        (reduce dfs new-state (get-in state [:nodes node])))
+      state))
+
+(defn start-dfs [input start]
+  (dfs {:visited #{} :nodes (build-nodes input)} start))
+
+(defn dfs-all [input]
+  (into #{} (map :visited (map #(start-dfs input %) (range 0 (count (string/split-lines input)))))))
+
+; (p (count (:visited (start-dfs day12-in 0))))
+; (p (count (dfs-all day12-in)))
+
+; day 13
