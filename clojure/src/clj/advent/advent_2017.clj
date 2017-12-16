@@ -572,4 +572,49 @@
 
 
 ; (p (day15-p1 day15-input iterations1))
-(p (day15-p1 day15-input iterations2))
+; (p (day15-p1 day15-input iterations2))
+
+; day 16
+
+(def day16-test "s1,x3/4,pe/b")
+(def input-test (-> day16-test (string/trim) (string/split #",")))
+(def day16-in (slurp "input/day16.txt"))
+(def input (-> day16-in (string/trim) (string/split #",")))
+
+(def programs "abcdefghijklmnop")
+; (def programs "abcde")
+
+(defn rotate-right [n list]
+  (rotate (- (count list) n) list))
+
+(defn spin [programs n]
+  (apply str (rotate-right n programs)))
+
+(defn partner [programs a b]
+  (-> programs
+      (string/replace (re-pattern a) "A")
+      (string/replace (re-pattern b) "B")
+      (string/replace #"A" b)
+      (string/replace #"B" a)))
+
+(defn exchange [programs a b]
+  (partner programs (str (get programs a))
+                    (str (get programs b))))
+
+(defn dance-move [programs input]
+  (let [cmd (subs input 0 1)
+        args (subs input 1)]
+    (cond
+      (= cmd "s") (spin programs (parse-int args))
+      (= cmd "x") (apply exchange (concat [programs] (int-vec args)))
+      (= cmd "p") (apply partner (concat [programs] (string/split args #"/")))
+      :else (p "no such inst!" cmd))))
+
+(defn run-dance [programs input]
+  (reduce dance-move programs input))
+
+; part 1
+(defn day16-p1 [input]
+  (run-dance programs input))
+
+(p "day16 p1" (day16-p1 input))
