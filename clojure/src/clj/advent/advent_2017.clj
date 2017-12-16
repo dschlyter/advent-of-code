@@ -587,34 +587,59 @@
 (defn rotate-right [n list]
   (rotate (- (count list) n) list))
 
-(defn spin [programs n]
-  (apply str (rotate-right n programs)))
+; rewrite for part2
+(defn base-perm [input]
+  {:pos (into [] (range (count input)))
+   :symbol (into {} (map (fn [x] [(str x) (str x)]) input))})
 
-(defn partner [programs a b]
-  (-> programs
-      (string/replace (re-pattern a) "A")
-      (string/replace (re-pattern b) "B")
-      (string/replace #"A" b)
-      (string/replace #"B" a)))
+(defn spin-p [perm n]
+  (update perm :pos #(into [] (rotate-right n %))))
 
-(defn exchange [programs a b]
-  (partner programs (str (get programs a))
-                    (str (get programs b))))
+(defn exchange-p [perm a b]
+  (-> perm
+    (update :pos #(assoc % a (get (:pos perm) b)))
+    (update :pos #(assoc % b (get (:pos perm) a)))))
 
-(defn dance-move [programs input]
+(defn partner-p [perm a b]
+  (let [swaps {a b b a}]
+    (update perm :symbol #(reduce-kv (fn [m k v] (assoc m k (or (get swaps v) v))) {} %))))
+
+(defn apply-perm [perm]
+  (as-> (apply str (map #(get programs %) (:pos perm))) progs
+    (apply str (map #(get (:symbol perm) (str %)) progs))))
+
+(defn dance-move [perm input]
   (let [cmd (subs input 0 1)
         args (subs input 1)]
     (cond
-      (= cmd "s") (spin programs (parse-int args))
-      (= cmd "x") (apply exchange (concat [programs] (int-vec args)))
-      (= cmd "p") (apply partner (concat [programs] (string/split args #"/")))
+      (= cmd "s") (spin-p perm (parse-int args))
+      (= cmd "x") (apply exchange-p (concat [perm] (int-vec args)))
+      (= cmd "p") (apply partner-p (concat [perm] (string/split args #"/")))
       :else (p "no such inst!" cmd))))
 
-(defn run-dance [programs input]
-  (reduce dance-move programs input))
+(defn run-dance [perm input]
+  (reduce dance-move perm input))
 
-; part 1
 (defn day16-p1 [input]
-  (run-dance programs input))
+  (-> (base-perm programs)
+      (run-dance input)
+      (apply-perm)))
 
-(p "day16 p1" (day16-p1 input))
+(p "day16 p1" (day16-p1 (flatten (repeat 2 input))))
+
+(defn repeat-perm [perm-result perm]
+  {:pos (into [] (map #(get (:pos perm-result) %) (:pos perm)))
+   :symbol (reduce-kv (fn [m k v] (assoc m k (get (:symbol perm) v))) {} (:symbol perm-result))})
+
+(defn day16-p2 [input]
+  (->> (run-dance (base-perm programs) input)
+       (repeat 1000)
+       (reduce repeat-perm (base-perm programs))
+       (repeat 1000)
+       (reduce repeat-perm (base-perm programs))
+       (repeat 1000)
+       (reduce repeat-perm (base-perm programs))
+       (apply-perm)))
+
+(p "day16 p2" (day16-p2 input))
+
