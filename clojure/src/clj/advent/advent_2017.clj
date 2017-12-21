@@ -745,20 +745,25 @@
 ; (p (grid-split "1212/3434/3333/4444" 2))
 
 (defn enhance [grid rules]
-  (let [split-size
-        (if (= (mod (count (string/replace grid #"/" "")) 2) 0) 2 3)]
+  (let [split-size (if (= (mod (count (string/replace grid #"/" "")) 2) 0) 2 3)
+        join-size (/ (count (first (string/split grid #"/"))) split-size)]
     (->>
       (grid-split grid split-size)
       (map #(get rules %))
-      (grid-join split-size))))
+      (grid-join join-size))))
 
 (defn count-on [grid]
   (count (string/replace grid #"[^#]" "")))
+
+(defn print-grid [grid]
+  (p (string/replace grid "/" "\n"))
+  (p "----"))
 
 (defn day21-p1 [input]
   (let [rules (make-rules input)]
     (->> start-pattern
       (iterate #(enhance % rules))
+      (map #(tap % print-grid))
       (take 6)
       last
       count-on)))
@@ -771,5 +776,5 @@
          last
          count-on)))
 
-(p (day21-p1 day21-in))
-(p (day21-p2 day21-in))
+; (p (day21-p1 day21-in))
+; (p (day21-p2 day21-in))
