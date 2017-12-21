@@ -17,6 +17,12 @@
   (apply println args)
   (first args))
 
+(defn t [name f]
+  (let [start (System/nanoTime)
+        ret (f)]
+    (p "Time" name (/ (- (System/nanoTime) start) 1e9))
+    ret))
+
 (defn parse-int
   ([s] (Integer/parseInt s))
   ([s b] (Integer/parseInt s b)))
@@ -27,6 +33,12 @@
 (defn neg-range [a b]
   (reverse
     (range (inc b) (inc a))))
+
+(defn insert [vec pos value]
+  (into []
+        (concat (subvec vec 0 (min pos (count vec)))
+                [value]
+                (subvec vec (min pos (count vec))))))
 
 (defn flatten-once [coll]
   (mapcat identity coll))
@@ -625,7 +637,7 @@
       (run-dance input)
       (apply-perm)))
 
-(p "day16 p1" (day16-p1 (flatten (repeat 2 input))))
+; (p "day16 p1" (t "p1" #(day16-p1 input)))
 
 (defn repeat-perm [perm-result perm]
   {:pos (into [] (map #(get (:pos perm-result) %) (:pos perm)))
@@ -641,5 +653,5 @@
        (reduce repeat-perm (base-perm programs))
        (apply-perm)))
 
-(p "day16 p2" (day16-p2 input))
+; (p "day16 p2" (t "p2" #(day16-p2 input)))
 
