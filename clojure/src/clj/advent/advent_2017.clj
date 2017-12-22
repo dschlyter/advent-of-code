@@ -682,6 +682,62 @@
 ; (p (last (take 50000001 (iterate circle-insert start-buffer))))
 ; part 2 hacked together in python
 
+; day 18
+
+(def day18-test
+  (->> (slurp "input/day18-test")
+       (string/split-lines)))
+
+(def day18-in
+  (->> (slurp "input/day18.txt")
+       (string/split-lines)))
+
+(def registers (atom {}))
+(def start-state {:line 0 :played 0})
+
+(defn get-val [token]
+  (if (re-matches #"-?[0-9]+" token)
+    (parse-int token)
+    (or (get @registers token) 0)))
+
+(defn execute [lines state]
+    (let [line (string/split (get lines (:line state)) #" ")
+          op (first line)
+          arg1 (nth line 1 nil)
+          arg2 (nth line 2 nil)
+          next (update state :line inc)]
+      ; (p "exec" op arg1 arg2 @registers)
+      (cond
+        (= op "snd") (assoc next :played (get-val arg1))
+        (= op "set") (do
+                       (swap! registers assoc arg1 (get-val arg2))
+                       next)
+        (= op "add") (do
+                       (swap! registers assoc arg1 (+ (get-val arg1) (get-val arg2)))
+                       next)
+        (= op "mul") (do
+                       (swap! registers assoc arg1 (* (get-val arg1) (get-val arg2)))
+                       next)
+        (= op "mod") (do
+                       (swap! registers assoc arg1 (mod (get-val arg1) (get-val arg2)))
+                       next)
+        (= op "rcv") (do
+                       (if (not= (get-val arg1) 0)
+                         (p "rcv" state)
+                         (p "(zero)" state))
+                       next)
+        (= op "jgz") (if (> (get-val arg1) 0)
+                       (assoc state :line (+ (:line state) (get-val arg2)))
+                       next)
+        :else (print op "no such op!!!"))))
+
+(defn day18-p1 [input]
+  (->> (iterate #(execute input %) start-state)
+    (take 10000)
+    (last)))
+
+(p (day18-p1 day18-in))
+
 ; day 20
 
 (def day20-in
@@ -701,7 +757,7 @@
 (defn day20-p1 [input]
   (sort-by manhattan-dist-acc input))
 
-(p "day 20 part 1" (take 2 (day20-p1 day20-in)))
+; (p "day 20 part 1" (take 2 (day20-p1 day20-in)))
 
 (defn add3 [pos vec]
   [(+ (get pos 0) (get vec 0))
