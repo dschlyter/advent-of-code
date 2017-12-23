@@ -688,11 +688,15 @@
   (->> (slurp "input/day18-test")
        (string/split-lines)))
 
+(def day18-test2
+  (->> (slurp "input/day18-test2.txt")
+       (string/split-lines)))
+
 (def day18-in
   (->> (slurp "input/day18.txt")
        (string/split-lines)))
 
-(def start-state {:line 0 :registers {} :send nil :recv []})
+(def start-state {:line 0 :registers {} :send nil :send-count 0 :recv []})
 
 (defn get-val [registers token]
   (if (re-matches #"-?[0-9]+" token)
@@ -708,7 +712,9 @@
           next (update state :line inc)]
       ; (p "exec" op arg1 arg2 @registers)
       (case op
-        "snd" (assoc next :send (get-val regs arg1))
+        "snd" (-> next
+                  (assoc :send (get-val regs arg1))
+                  (update :send-count inc))
         "set" (assoc-in next [:registers arg1] (get-val regs arg2))
         "add" (assoc-in next [:registers arg1] (+ (get-val regs arg1) (get-val regs arg2)))
         "mul" (assoc-in next [:registers arg1] (* (get-val regs arg1) (get-val regs arg2)))
@@ -778,11 +784,14 @@
        (transfer)))
 
 (defn day18-p2 [input]
-  (->> (iterate #(execute-all input %) [start-state start-state])
-       (take 2000)
+  (->> [start-state start-state]
+       (map-indexed #(assoc-in %2 [:registers "p"] %1))
+       p
+       (iterate #(execute-all input %))
+       (take 2000000)
        (last)))
 
-; (p (day18-p1 day18-in))
+(p (day18-p2 day18-in))
 
 ; TODO remove?
 ; (p (is-deadlock day18-test [{:line 6 :recv []}]))
