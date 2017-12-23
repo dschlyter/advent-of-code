@@ -692,45 +692,36 @@
   (->> (slurp "input/day18.txt")
        (string/split-lines)))
 
-(def registers (atom {}))
-(def start-state {:line 0 :send nil :recv []})
+(def start-state {:line 0 :registers {} :send nil :recv []})
 
-(defn get-val [token]
+(defn get-val [registers token]
   (if (re-matches #"-?[0-9]+" token)
     (parse-int token)
-    (or (get @registers token) 0)))
+    (or (get registers token) 0)))
 
 (defn execute [lines state]
     (let [line (string/split (get lines (:line state)) #" ")
+          regs (:registers state)
           op (first line)
           arg1 (nth line 1 nil)
           arg2 (nth line 2 nil)
           next (update state :line inc)]
       ; (p "exec" op arg1 arg2 @registers)
-      (cond
-        (= op "snd") (assoc next :send (get-val arg1))
-        (= op "set") (do
-                       (swap! registers assoc arg1 (get-val arg2))
-                       next)
-        (= op "add") (do
-                       (swap! registers assoc arg1 (+ (get-val arg1) (get-val arg2)))
-                       next)
-        (= op "mul") (do
-                       (swap! registers assoc arg1 (* (get-val arg1) (get-val arg2)))
-                       next)
-        (= op "mod") (do
-                       (swap! registers assoc arg1 (mod (get-val arg1) (get-val arg2)))
-                       next)
-        (= op "rcv") (do
-                       (if-let [recv (first (:recv state))]
-                         (do
-                           (p "got" recv (count (:recv state)))
-                           (swap! registers assoc arg1 recv)
-                           (update next :recv #(drop 1 %)))
-                         state)) ; state is unchanged
-        (= op "jgz") (if (> (get-val arg1) 0)
-                       (assoc state :line (+ (:line state) (get-val arg2)))
-                       next)
+      (case op
+        "snd" (assoc next :send (get-val regs arg1))
+        "set" (assoc-in next [:registers arg1] (get-val regs arg2))
+        "add" (assoc-in next [:registers arg1] (+ (get-val regs arg1) (get-val regs arg2)))
+        "mul" (assoc-in next [:registers arg1] (* (get-val regs arg1) (get-val regs arg2)))
+        "mod" (assoc-in next [:registers arg1] (mod (get-val regs arg1) (get-val regs arg2)))
+        "rcv" (if-let [recv (first (:recv state))]
+                (-> next
+                    ; (p (get-val regs arg1)) ; print for part 1
+                    (assoc-in [:registers arg1] recv)
+                    (update :recv #(drop 1 %)))
+                state) ; state is unchanged
+        "jgz" (if (> (get-val regs arg1) 0)
+                 (assoc state :line (+ (:line state) (get-val regs arg2)))
+                 next)
         :else (print op "no such op!!!"))))
 
 (defn transfer-one [states from to]
@@ -747,15 +738,20 @@
         (transfer-one 1 0))
     (transfer-one states 0 0)))
 
-(defn execute-all [input states]
-  (->> states
-    (map #(execute input %))
-    (into [])
-    (transfer)))
+; make part 1 conform to part 2 model
+(defn only-last-recv [state]
+  (if (< 1 (count (:recv state)))
+    (update state :recv #(list (last %)))
+    state))
 
-; pretty much butchered for part 2, use git
+(defn execute-p1 [input states]
+  (->> states
+       (map #(execute input %))
+       (map only-last-recv)
+       (into [])
+       (transfer)))
 (defn day18-p1 [input]
-  (->> (iterate #(execute-all input %) [start-state])
+  (->> (iterate #(execute-p1 input %) [start-state])
     (take 2000)
     (last)))
 
@@ -774,6 +770,12 @@
   (not-any? #(or (not= "rcv" (get-op lines (:line %)))
                  (> (count (:recv %)) 0))
             states))
+
+(defn execute-all [input states]
+  (->> states
+       (map #(execute input %))
+       (into [])
+       (transfer)))
 
 (defn day18-p2 [input]
   (->> (iterate #(execute-all input %) [start-state start-state])
