@@ -696,7 +696,7 @@
   (->> (slurp "input/day18.txt")
        (string/split-lines)))
 
-(def start-state {:line 0 :registers {} :send nil :send-count 0 :recv []})
+(def start-state {:line 0 :registers {} :mul-count 0 :send nil :send-count 0 :recv []})
 
 (defn get-val [registers token]
   (if (re-matches #"-?[0-9]+" token)
@@ -704,7 +704,8 @@
     (or (get registers token) 0)))
 
 (defn execute [lines state]
-    (let [line (string/split (get lines (:line state)) #" ")
+    (let [line (string/split (or (get lines (:line state) "end"))
+                             #" ")
           regs (:registers state)
           op (first line)
           arg1 (nth line 1 nil)
@@ -712,12 +713,17 @@
           next (update state :line inc)]
       ; (p "exec" op arg1 arg2 @registers)
       (case op
+        "end" (assoc state :end true)
+        "nop" next
         "snd" (-> next
                   (assoc :send (get-val regs arg1))
                   (update :send-count inc))
         "set" (assoc-in next [:registers arg1] (get-val regs arg2))
         "add" (assoc-in next [:registers arg1] (+ (get-val regs arg1) (get-val regs arg2)))
-        "mul" (assoc-in next [:registers arg1] (* (get-val regs arg1) (get-val regs arg2)))
+        "sub" (assoc-in next [:registers arg1] (- (get-val regs arg1) (get-val regs arg2)))
+        "mul" (-> next
+                  (update :mul-count inc)
+                  (assoc-in [:registers arg1] (* (get-val regs arg1) (get-val regs arg2))))
         "mod" (assoc-in next [:registers arg1] (mod (get-val regs arg1) (get-val regs arg2)))
         "rcv" (if-let [recv (first (:recv state))]
                 (-> next
@@ -728,6 +734,9 @@
         "jgz" (if (> (get-val regs arg1) 0)
                  (assoc state :line (+ (:line state) (get-val regs arg2)))
                  next)
+        "jnz" (if (not= (get-val regs arg1) 0)
+                (assoc state :line (+ (:line state) (get-val regs arg2)))
+                next)
         :else (print op "no such op!!!"))))
 
 (defn transfer-one [states from to]
@@ -756,12 +765,13 @@
        (map only-last-recv)
        (into [])
        (transfer)))
+
 (defn day18-p1 [input]
   (->> (iterate #(execute-p1 input %) [start-state])
     (take 2000)
     (last)))
 
-(p (day18-p1 day18-in))
+(p "day 18 1" (day18-p1 day18-in))
 
 ; TODO opt?
 (defn pq []
@@ -786,12 +796,11 @@
 (defn day18-p2 [input]
   (->> [start-state start-state]
        (map-indexed #(assoc-in %2 [:registers "p"] %1))
-       p
        (iterate #(execute-all input %))
-       (take 2000000)
+       (take 100000)
        (last)))
 
-(p (day18-p2 day18-in))
+(p "day 18 2" (day18-p2 day18-in))
 
 ; TODO remove?
 ; (p (is-deadlock day18-test [{:line 6 :recv []}]))
@@ -810,6 +819,22 @@
 (def day23-in
   (->> (slurp "input/day23.txt")
        (string/split-lines)))
+
+(defn day23-p1 [input]
+  (->> (iterate #(execute-p1 input %) [start-state])
+       (take 200000)
+       (last)))
+
+(p "day 23 p1" (day23-p1 day23-in))
+
+(defn day23-p1 [input]
+  (->> [start-state]
+       (map #(assoc-in % [:registers "a"] 1))
+       (iterate #(execute-p1 input %))
+       (take 400000)
+       (last)))
+
+(p "day 23 p2" (day23-p1 day23-in))
 
 ; day 20
 
