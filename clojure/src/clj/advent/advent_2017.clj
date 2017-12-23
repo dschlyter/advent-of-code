@@ -693,7 +693,7 @@
        (string/split-lines)))
 
 (def registers (atom {}))
-(def start-state {:line 0 :send [] :recv []})
+(def start-state {:line 0 :send nil :recv []})
 
 (defn get-val [token]
   (if (re-matches #"-?[0-9]+" token)
@@ -708,7 +708,7 @@
           next (update state :line inc)]
       ; (p "exec" op arg1 arg2 @registers)
       (cond
-        (= op "snd") (assoc next :played (get-val arg1))
+        (= op "snd") (assoc next :send (get-val arg1))
         (= op "set") (do
                        (swap! registers assoc arg1 (get-val arg2))
                        next)
@@ -722,21 +722,73 @@
                        (swap! registers assoc arg1 (mod (get-val arg1) (get-val arg2)))
                        next)
         (= op "rcv") (do
-                       (if (not= (get-val arg1) 0)
-                         (p "rcv" state)
-                         (p "(zero)" state))
-                       next)
+                       (if-let [recv (first (:recv state))]
+                         (do
+                           (p "got" recv (count (:recv state)))
+                           (swap! registers assoc arg1 recv)
+                           (update next :recv #(drop 1 %)))
+                         state)) ; state is unchanged
         (= op "jgz") (if (> (get-val arg1) 0)
                        (assoc state :line (+ (:line state) (get-val arg2)))
                        next)
         :else (print op "no such op!!!"))))
 
+(defn transfer-one [states from to]
+  (if-let [send (get-in states [from :send])]
+    (-> states
+        (update-in [to :recv] #(concat % [send]))
+        (assoc-in [from :send] nil))
+    states))
+
+(defn transfer [states]
+  (if (= (count states) 2)
+    (-> states
+        (transfer-one 0 1)
+        (transfer-one 1 0))
+    (transfer-one states 0 0)))
+
+(defn execute-all [input states]
+  (->> states
+    (map #(execute input %))
+    (into [])
+    (transfer)))
+
+; pretty much butchered for part 2, use git
 (defn day18-p1 [input]
-  (->> (iterate #(execute input %) start-state)
+  (->> (iterate #(execute-all input %) [start-state])
     (take 2000)
     (last)))
 
 (p (day18-p1 day18-in))
+
+; TODO opt?
+(defn pq []
+  (clojure.lang.PersistentQueue/EMPTY))
+
+(defn get-op [lines index]
+  (p "getop" lines index)
+  (let [line (string/split (get lines index) #" ")]
+    (first line)))
+
+(defn is-deadlock [lines states]
+  (not-any? #(or (not= "rcv" (get-op lines (:line %)))
+                 (> (count (:recv %)) 0))
+            states))
+
+(defn day18-p2 [input]
+  (->> (iterate #(execute-all input %) [start-state start-state])
+       (take 2000)
+       (last)))
+
+; (p (day18-p1 day18-in))
+
+; TODO remove?
+; (p (is-deadlock day18-test [{:line 6 :recv []}]))
+; (p (is-deadlock day18-test [{:line 7 :recv []}]))
+; (p (is-deadlock day18-test [{:line 6 :recv [1]}]))
+
+; (p (transfer [{:send 5 :recv [1 2 3 4]}]))
+; (p (transfer [{:send 5 :recv [1 2 3 4]} {:send nil :recv []}]))
 
 ; day 23 (builds on day 18)
 
@@ -929,7 +981,7 @@
       (flatten-once)
       (into {}))))
 
-(p (read-virus-grid day22-test))
+; (p (read-virus-grid day22-test))
 
 (def dirs [[0 1] [1 0] [0 -1] [-1 0]])
 (def state-start {:nodes {} :pos [0 0] :dir 0 :count 0})
