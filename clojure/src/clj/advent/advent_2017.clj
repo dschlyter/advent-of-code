@@ -43,6 +43,9 @@
 (defn flatten-once [coll]
   (mapcat identity coll))
 
+(defn map-values [f m]
+  (into {} (for [[k v] m] [k (f v)])))
+
 (defn zip [seq1 seq2]
   (map vector seq1 seq2))
 
@@ -771,11 +774,7 @@
     (take 2000)
     (last)))
 
-(p "day 18 1" (day18-p1 day18-in))
-
-; TODO opt?
-(defn pq []
-  (clojure.lang.PersistentQueue/EMPTY))
+; (p "day 18 1" (day18-p1 day18-in))
 
 (defn get-op [lines index]
   (p "getop" lines index)
@@ -800,15 +799,7 @@
        (take 100000)
        (last)))
 
-(p "day 18 2" (day18-p2 day18-in))
-
-; TODO remove?
-; (p (is-deadlock day18-test [{:line 6 :recv []}]))
-; (p (is-deadlock day18-test [{:line 7 :recv []}]))
-; (p (is-deadlock day18-test [{:line 6 :recv [1]}]))
-
-; (p (transfer [{:send 5 :recv [1 2 3 4]}]))
-; (p (transfer [{:send 5 :recv [1 2 3 4]} {:send nil :recv []}]))
+; (p "day 18 2" (day18-p2 day18-in))
 
 ; day 23 (builds on day 18)
 
@@ -825,7 +816,7 @@
        (take 200000)
        (last)))
 
-(p "day 23 p1" (day23-p1 day23-in))
+; (p "day 23 p1" (day23-p1 day23-in))
 
 (defn day23-p1 [input]
   (->> [start-state]
@@ -834,7 +825,7 @@
        (take 400000)
        (last)))
 
-(p "day 23 p2" (day23-p1 day23-in))
+; (p "day 23 p2" (day23-p1 day23-in))
 
 ; day 20
 
@@ -1089,3 +1080,69 @@
 
 ; 39 s, pretty slow
 ; (p "day 22 part 2" (:count (day22-p2 day22-in)))
+
+; day 24
+
+; dynamic programming, the strongest bridge that ends with component n at length m
+; fail case
+; 0/20 20/2 2/2 2/1 1/0
+; 0/1 1/2 2/2 2/20 20/100
+
+(def day24-in (map int-vec (string/split-lines (slurp "input/day24.txt"))))
+(def day24-test (map int-vec (string/split-lines (slurp "input/day24-test.txt"))))
+
+(defn make-connection-map [input]
+  (->> input
+    (mapcat (fn [[x y]] [[x [x y]] [y [x y]]]))
+    (group-by #(get % 0))
+    (map-values #(map (fn [[k v]] v) %))))
+
+(def size-matters (atom false))
+(def best-bridge (atom {:len 0 :str 0}))
+
+(defn bridge-str [bridge]
+  (reduce (fn [s [a b]] (+ s a b)) 0 bridge))
+
+; (p (bridge-str #{[1 2] [2 3]}))
+
+(defn next-port-size [prev-port-size [a b]]
+  (if (= prev-port-size a)
+    b
+    a))
+
+(defn better-bridge [bridge best]
+  (if @size-matters
+    (or
+      (> (:len bridge) (:len best))
+      (and
+        (>= (:len bridge) (:len best))
+        (> (:str bridge) (:str best))))
+    (> (:str bridge) (:str best))))
+
+(defn bridge-brute-force [state conns]
+  (let [len (count (:comps state))
+        str (bridge-str (:comps state))
+        bridge-data {:len len :str str}]
+    (if (better-bridge bridge-data @best-bridge)
+      (do
+        (reset! best-bridge bridge-data)
+        (println state bridge-data str))))
+  (->> (get conns (:next state))
+    (remove #(contains? (:comps state) %))
+    (map (fn [next-comp] (bridge-brute-force
+                           (-> state
+                             (update :comps conj next-comp)
+                             (assoc :next (next-port-size (:next state) next-comp)))
+                           conns)))
+    (doall)))
+
+(defn day24-p1 [input]
+  (let [conns (make-connection-map input)]
+    (bridge-brute-force {:comps #{} :next 0} conns)))
+
+(defn day24-p2 [input]
+  (reset! size-matters true)
+  (day24-p1 day24-in))
+
+(day24-p1 day24-in)
+(day24-p2 day24-in)
