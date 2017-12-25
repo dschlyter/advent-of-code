@@ -20,4 +20,4 @@
 (require '[samestep.boot-refresh :refer [refresh]])
 
 ; load it in the repl
-(require 'advent.advent-2017)
+(require 'aoc2017.core)
