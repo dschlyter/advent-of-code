@@ -1,22 +1,20 @@
 Advent of code
 ==============
 
-In clojure, using boot
+In Clojure, using boot
 
 Running
 -------
 
     ./run.sh dev
-    
-To start the program, with an nrepl server and autorefresh on file changes
+
+To start the program.
+
+Boot is set up to autorelead the code near instantly on any changes. This enables a very quick feedback loop.
+
+An nrepl is also started, however it does not work great with the autoreload, so it is mostly useful for quick experimentation. Start with:
 
     ./run.sh repl
-    
-To connect repl (optional, code will autorefresh and print output)
-
-You need to switch namespace after connecting.
-
-    (ns advent.advent-2017)
 
 Even better is to connect in cursive and get autocomplete and other nice stuff.
 
@@ -25,7 +23,6 @@ Look in the script for more details.
 Cursive
 -------
 
-Leiningens boot support seems a bit quirky, the hack serves as a workaround and is included in build.boot
+Cursives boot support seems a bit quirky, the hack serves as a workaround and is included in build.boot
 
 https://github.com/boot-clj/boot/wiki/For-Cursive-Users
-
