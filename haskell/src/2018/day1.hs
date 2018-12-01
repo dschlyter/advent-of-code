@@ -1,6 +1,9 @@
 module Problem where
 
-    import Util
+    import Prelude as P
+    import Data.Set as S
+
+    import Util as U
 
     main :: IO()
     main = do
@@ -13,17 +16,13 @@ module Problem where
         l <- readFile "input/day1.txt"
         return (lines l)
 
+    parse :: [String] -> [Int]
+    parse = (P.map U.toInt) . (P.map removePlus) 
+
     problem :: [String] -> Int
-    problem lines = mySum . toInts . cyclic . head $ lines
+    problem lines = (P.foldr (+) 0) . parse $ lines
 
-    problem2 :: [String] -> Int
-    problem2 lines = mySum2 . pairUp . toInts . head $ lines
-
-    cyclic :: String -> String
-    cyclic line = line ++ [(head line)]
-
-    toInts :: String -> [Int]
-    toInts chars = map (\x -> read [x] :: Int) chars
+    removePlus str = U.replace '+' "" str
 
     mySum :: [Int] -> Int
     mySum (i1:i2:rest)
@@ -33,15 +32,11 @@ module Problem where
 
     -- part 2
 
-    rotate :: [a] -> [a]
-    rotate str = (drop half str) ++ (take half str)
-        where half = quot (length str) 2
+    problem2 :: [String] -> Int
+    problem2 lines = cycleFreq 0 S.empty (cycle (parse lines))
 
-    pairUp :: [a] -> [(a, a)]
-    pairUp str = zip str (rotate str)
-
-    mySum2 :: [(Int, Int)] -> Int
-    mySum2 ((i1,i2):rest)
-        | i1 == i2 = i1 + (mySum2 rest)
-        | otherwise = mySum2 rest
-    mySum2 _ = 0
+    cycleFreq :: Int -> Set Int -> [Int] -> Int
+    cycleFreq freq usedFreqs changes
+        | S.member freq usedFreqs = freq
+        | otherwise = cycleFreq newFreq (S.insert freq usedFreqs) (tail changes)
+            where newFreq = freq + (head changes)
