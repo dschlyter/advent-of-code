@@ -1,7 +1,7 @@
 module Problem where
 
-    import Prelude as P
-    import Data.Set as S
+    import qualified Data.Set as S
+    import Data.Function ((&))
 
     import Util as U
 
@@ -17,10 +17,10 @@ module Problem where
         return (lines l)
 
     parse :: [String] -> [Int]
-    parse = (P.map U.toInt) . (P.map removePlus) 
+    parse = (map (removePlus >>> U.toInt))
 
     problem :: [String] -> Int
-    problem lines = (P.foldr (+) 0) . parse $ lines
+    problem lines = lines & parse >>> foldr (+) 0
 
     removePlus str = U.replace '+' "" str
 
@@ -35,7 +35,7 @@ module Problem where
     problem2 :: [String] -> Int
     problem2 lines = cycleFreq 0 S.empty (cycle (parse lines))
 
-    cycleFreq :: Int -> Set Int -> [Int] -> Int
+    cycleFreq :: Int -> S.Set Int -> [Int] -> Int
     cycleFreq freq usedFreqs changes
         | S.member freq usedFreqs = freq
         | otherwise = cycleFreq newFreq (S.insert freq usedFreqs) (tail changes)
