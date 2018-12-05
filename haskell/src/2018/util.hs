@@ -15,4 +15,10 @@ module Util where
     allPairs :: [t] -> [(t, t)]
     allPairs a = [(x,y) | (x:ys) <- tails a, y <- ys]
 
+    split :: Char -> String -> [String]
+    split token s =  case dropWhile (==token) s of
+                      "" -> []
+                      s' -> w : split token s''
+                            where (w, s'') = break (==token) s'
+
     (>>>) = flip (.)
