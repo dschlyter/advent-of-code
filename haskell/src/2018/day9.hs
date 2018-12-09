@@ -6,7 +6,7 @@ module Day9 where
     import qualified Data.Set as S
     import qualified Data.Map as M
     import Data.Function ((&))
-    import Data.List (sortBy, groupBy, sort, group)
+    import Data.List (sortBy, groupBy, sort, group, foldl')
     import Data.Tuple (swap)
     import Data.Ord (compare)
 
@@ -80,7 +80,7 @@ module Day9 where
     aggScores :: Int -> [Int] -> (Int, Int)
     aggScores players scores = scores 
         & zip (cycle [1..players]) 
-        & foldr (\(player, points) map -> M.insertWith (+) player points map) M.empty 
+        & foldl' (\map (player, points) -> M.insertWith (+) player points map) M.empty 
         & M.toList 
         & map swap 
         & maximum
