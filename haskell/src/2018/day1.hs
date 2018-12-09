@@ -3,7 +3,8 @@ module Problem where
     import qualified Data.Set as S
     import Data.Function ((&))
 
-    import Util as U
+    import Util ((>>>))
+    import qualified Util as U
 
     main :: IO()
     main = do

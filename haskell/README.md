@@ -1,5 +1,6 @@
 Tooling
 
+* Stack
 * VS Code
 * Haskell Simple GHC Integration
 
@@ -8,11 +9,20 @@ The docs:
 * http://hackage.haskell.org/package/base-4.12.0.0/docs/Prelude.html
 * http://cheatsheet.codeslower.com/CheatSheet.pdf
 
+Packages needed
+---------------
+
+This not best practice but I don't have time to set up haskells broken tooling properly
+
+    stack install containers
+
+Use [hoogle](https://www.haskell.org/hoogle/) to find and install what you dont have.
+
 How to run
 ----------
 
-    cd src/2018
-    stack runhaskell day1.hs
+    cd src
+    stack runhaskell 2018/day1.hs
 
 REPL usage
 ----------

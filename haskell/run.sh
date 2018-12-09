@@ -9,5 +9,6 @@ cd "src/2018"
 
 curr_date="$(date '+%-d')"
 prev_date=$(($curr_date - 1))
-cp "day${prev_date}.hs" "day${curr_date}.hs"
-stack ghci --ghci-options "day${curr_date}.hs"
+file="day${curr_date}.hs"
+test -f "$file" || cp "day${prev_date}.hs" "$file"
+stack ghci --ghci-options "$file"
