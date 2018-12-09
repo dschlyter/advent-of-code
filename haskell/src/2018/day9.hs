@@ -14,7 +14,6 @@ module Day9 where
     import Data.Array.Unboxed
 
     import Util
-
     import Control.Monad.State.Strict
 
     -- input = load 9
@@ -71,7 +70,7 @@ module Day9 where
         put (turnNumber+1, if not special
             then circle & next & next & insert turnNumber
             else circle & prev7 & removeMarble)
-        return (if special then turnNumber + (circle & prev7 & getMarble) else 0)
+        return $! (if special then turnNumber + (circle & prev7 & getMarble) else 0)
 
     marbleGame players marbles =
         evalState (mapM (const marbleGameMonad) [1..marbles]) (1, circle 0)
@@ -84,26 +83,8 @@ module Day9 where
         & M.toList 
         & map swap 
         & maximum
-        
-    -- for some strange reason this does not work except in the repl ¯\_(ツ)_/¯
-    -- & zip (cycle [1..430]) & foldr (\(player, points) map -> M.insertWith (+) player points map) M.empty & M.toList & map swap & maximum
-    -- & zip (cycle [1..430]) & foldl (\map (player, points) -> M.insertWith (+) player points map) M.empty & M.toList & map swap & maximum
 
     -- part 2
 
     marbles2 = marbles * 100
-    problem2 = marbleGameWithoutMonads players marbles2
-
-    marbleGameScores :: GameState -> [Int]
-    marbleGameScores (turnNumber, circle) = let
-        special = mod turnNumber 23 == 0
-        nextState = (turnNumber+1, if not special
-            then circle & next & next & insert turnNumber
-            else circle & prev7 & removeMarble)
-        score = (if special then turnNumber + (circle & prev7 & getMarble) else 0)
-        in score : (marbleGameScores nextState)
-
-    marbleGameWithoutMonads players marbles =
-        marbleGameScores (1, circle 0) 
-        & take marbles
-        & aggScores players
+    problem2 = marbleGame players marbles2
