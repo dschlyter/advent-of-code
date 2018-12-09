@@ -14,7 +14,7 @@ module Day3 where
 
     import Util
 
-    input = load 6
+    input = load 8
 
     main :: IO()
     main = do
@@ -43,13 +43,6 @@ module Day3 where
         points :: Set (Int, Int)
     } deriving (Show)
     data Cardinality = Finite | Infinite deriving (Eq, Show)
-
-    createArea :: (Int,(Int,Int)) -> Area
-    createArea (index,pos) = Area {idNum=index, cardinality=Finite, points=S.singleton pos}
-
-    expandLoop :: [Area] -> [Area]
-    expandLoop areas = expandLoopInner areas S.empty
-    -- expandLoop areas equalPoints = map (\area -> expand area (border (points area))) areas
 
 
     -- create expansion

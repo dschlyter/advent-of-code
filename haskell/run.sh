@@ -4,11 +4,13 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-cd "src/2018"
-./fetch.sh
+default_date="${1:-$(date '+%-d')}"
+date="${1:-$default_date}"
+prev_date=$(($date - 1))
 
-curr_date="$(date '+%-d')"
-prev_date=$(($curr_date - 1))
-file="day${curr_date}.hs"
+cd "src/2018"
+./fetch.sh "$date"
+
+file="day${date}.hs"
 test -f "$file" || cp "day${prev_date}.hs" "$file"
 stack ghci --ghci-options "$file"

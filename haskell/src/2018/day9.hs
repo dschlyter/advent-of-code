@@ -1,4 +1,4 @@
-module Day3 where
+module Day9 where
 
     import Debug.Trace
 
@@ -15,7 +15,7 @@ module Day3 where
 
     import Util
 
-    import Control.Monad.State
+    import Control.Monad.State.Strict
 
     -- input = load 9
     players = 430
@@ -59,12 +59,10 @@ module Day3 where
     
     prev7 c = iterate prev c !! 7
 
-    -- problem :: [String] -> Int
+    -- part 1
     problem = marbleGame players marbles
 
     type GameState = (Int, Circle Int)
-    -- marbleGame :: GameState -> State 
-    -- marbleGame
 
     marbleGameMonad :: State GameState Int
     marbleGameMonad = do
@@ -75,16 +73,37 @@ module Day3 where
             else circle & prev7 & removeMarble)
         return (if special then turnNumber + (circle & prev7 & getMarble) else 0)
 
-    -- marbleGame :: Int -> Int -> Int -> Int -> State 
     marbleGame players marbles =
-        evalState (repeat marbleGameMonad & sequence) (1, circle 0)
-        & take marbles
-        & zip (cycle [1..players])
-        & foldl (\map (player, points) -> M.insertWith (+) player points map) M.empty
-        & M.toList
-        & map swap
+        evalState (mapM (const marbleGameMonad) [1..marbles]) (1, circle 0)
+        & aggScores players
+
+    aggScores :: Int -> [Int] -> (Int, Int)
+    aggScores players scores = scores 
+        & zip (cycle [1..players]) 
+        & foldr (\(player, points) map -> M.insertWith (+) player points map) M.empty 
+        & M.toList 
+        & map swap 
         & maximum
+        
+    -- for some strange reason this does not work except in the repl ¯\_(ツ)_/¯
+    -- & zip (cycle [1..430]) & foldr (\(player, points) map -> M.insertWith (+) player points map) M.empty & M.toList & map swap & maximum
+    -- & zip (cycle [1..430]) & foldl (\map (player, points) -> M.insertWith (+) player points map) M.empty & M.toList & map swap & maximum
 
     -- part 2
 
-    problem2 = marbleGame players $ marbles*100
+    marbles2 = marbles * 100
+    problem2 = marbleGameWithoutMonads players marbles2
+
+    marbleGameScores :: GameState -> [Int]
+    marbleGameScores (turnNumber, circle) = let
+        special = mod turnNumber 23 == 0
+        nextState = (turnNumber+1, if not special
+            then circle & next & next & insert turnNumber
+            else circle & prev7 & removeMarble)
+        score = (if special then turnNumber + (circle & prev7 & getMarble) else 0)
+        in score : (marbleGameScores nextState)
+
+    marbleGameWithoutMonads players marbles =
+        marbleGameScores (1, circle 0) 
+        & take marbles
+        & aggScores players
