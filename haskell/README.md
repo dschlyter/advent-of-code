@@ -40,6 +40,8 @@ cmd-1 to return to main code window
     :r 
     main
 
+Use `set +s` to time functions
+
 Play around with the input
 --------------------------
 

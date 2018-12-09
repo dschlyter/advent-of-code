@@ -46,16 +46,21 @@ module Day3 where
     prev ([], ys) = prev (reverse ys, [])
     prev (x:xs, ys) = (xs, x:ys)
 
-    removeItem :: ([a], [a]) -> ([a], [a])
-    removeItem ([], []) = ([], [])
-    removeItem (xs, []) = removeItem (curr (xs, []))
-    removeItem (xs, y:ys) = (xs, ys)
+    removeMarble :: ([a], [a]) -> ([a], [a])
+    removeMarble ([], []) = ([], [])
+    removeMarble (xs, []) = removeMarble (curr (xs, []))
+    removeMarble (xs, y:ys) = (xs, ys)
 
     insert :: a -> ([a], [a]) -> ([a], [a])
     insert elem (xs, ys) = (xs, elem : ys)
 
+    getMarble :: ([a], [a]) -> a
+    getMarble c = let (x,y:ys) = (curr c) in y
+    
+    prev7 c = iterate prev c !! 7
+
     -- problem :: [String] -> Int
-    problem = 1 -- marbleGame 0 players 0 marbles
+    problem = marbleGame players marbles
 
     type GameState = (Int, Circle Int)
     -- marbleGame :: GameState -> State 
@@ -65,11 +70,10 @@ module Day3 where
     marbleGameMonad = do
         (turnNumber, circle) <- get
         special <- return $ mod turnNumber 23 == 0
-        put (turnNumber+1, circle & next & insert turnNumber)
-        return (if special then turnNumber else 0)
-
-    repeatMonad :: Monad m => Int -> m a -> m [a]
-    repeatMonad n monad = repeat monad & take n & sequence
+        put (turnNumber+1, if not special
+            then circle & next & next & insert turnNumber
+            else circle & prev7 & removeMarble)
+        return (if special then turnNumber + (circle & prev7 & getMarble) else 0)
 
     -- marbleGame :: Int -> Int -> Int -> Int -> State 
     marbleGame players marbles =
@@ -79,19 +83,8 @@ module Day3 where
         & foldl (\map (player, points) -> M.insertWith (+) player points map) M.empty
         & M.toList
         & map swap
-        & sort
-
-    -- create expansion
-    -- remove 
-    -- mark as infinite
-
-    mytest :: State Int String
-    mytest = do
-        x <- get
-        put (x+1)
-        return (if (x == 10) then "prize" else "nope")
+        & maximum
 
     -- part 2
 
-    problem2 :: Int
-    problem2 = 2
+    problem2 = marbleGame players $ marbles*100
