@@ -43,23 +43,24 @@ def power_level(x, y):
 def problem2():
     # precalc
     grid = []
-    for x in range(0, 301):
+    grid.append([0]*301)
+    for x in range(1, 301):
         grid.append([0]*301)
         sum = 0
         for y in range(1, 301):
             sum += power_level(x, y)
-            grid[x][y] = sum
+            grid[x][y] = sum + grid[x-1][y]
 
     best = 0
-    # did not even need to finish all the way
     for size in range(1, 301):
-        print("size", size)
         for i in range(1, 301 + 1 - size):
             for j in range(1, 301 + 1 - size):
-                sum = 0
-                for x in range(i, i+size):
-                    y1, y2 = j, j+size-1
-                    sum += grid[x][y2] - grid[x][y1-1]
+                s = size-1
+                sum = grid[i+s][j+s]
+                sum -= grid[i+s][j-1]
+                sum -= grid[i-1][j+s]
+                # add this part that was subtracted twice
+                sum += grid[i-1][j-1]
                 if sum > best:
                     best = sum
                     print(i, j, size, sum)
