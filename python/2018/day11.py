@@ -9,6 +9,8 @@ import re
 
 import util
 
+from multiprocessing import Pool
+
 filename = 'input/day10.txt'
 
 
@@ -39,10 +41,13 @@ def power_level(x, y):
     return math.floor(x / 100) % 10 - 5
 
 
+grid = []
+
+
 @util.timing
 def problem2():
     # precalc
-    grid = []
+    global grid
     grid.append([0]*301)
     for x in range(1, 301):
         grid.append([0]*301)
@@ -51,19 +56,26 @@ def problem2():
             sum += power_level(x, y)
             grid[x][y] = sum + grid[x-1][y]
 
+    pool = Pool()
+    res = pool.map(solve2, range(1, 301))
+    print(list(sorted(res))[-1])
+
+
+def solve2(size):
     best = 0
-    for size in range(1, 301):
-        for i in range(1, 301 + 1 - size):
-            for j in range(1, 301 + 1 - size):
-                s = size-1
-                sum = grid[i+s][j+s]
-                sum -= grid[i+s][j-1]
-                sum -= grid[i-1][j+s]
-                # add this part that was subtracted twice
-                sum += grid[i-1][j-1]
-                if sum > best:
-                    best = sum
-                    print(i, j, size, sum)
+    ret = []
+    for i in range(1, 301 + 1 - size):
+        for j in range(1, 301 + 1 - size):
+            s = size-1
+            sum = grid[i+s][j+s]
+            sum -= grid[i+s][j-1]
+            sum -= grid[i-1][j+s]
+            # add this part that was subtracted twice
+            sum += grid[i-1][j-1]
+            if sum > best:
+                best = sum
+                ret = [sum, i, j, size]
+    return ret
 
 
 if __name__ == '__main__':
