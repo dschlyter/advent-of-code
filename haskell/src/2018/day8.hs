@@ -1,4 +1,4 @@
-module Day3 where
+module Day9 where
 
     import Debug.Trace
 
@@ -6,50 +6,85 @@ module Day3 where
     import qualified Data.Set as S
     import qualified Data.Map as M
     import Data.Function ((&))
-    import Data.List (sortBy, groupBy, sort, group)
+    import Data.List (sortBy, groupBy, sort, group, foldl')
+    import Data.Tuple (swap)
     import Data.Ord (compare)
 
     import Data.Array.ST
     import Data.Array.Unboxed
 
     import Util
+    import Control.Monad.State.Strict
 
-    input = load 8
+    -- input = load 9
+    players = 430
+    marbles = 71588
 
     main :: IO()
     main = do
-        l <- input
-        print (problem l)
-        print (problem2 l)
+        -- l <- input
+        print (problem)
+        print (problem2)
 
-    -- problem :: [String] -> Int
-    problem lines = lines
-        & map parse
-        & zip [1..]
-        & map createArea
-        & expandLoop
-        & filter ((== Finite) . cardinality)
-        & maxByKey (\x -> length $ points x)
-        & (length . points)
+    -- cicle impl - why u no doubly linked-list haskell
+    type Circle a = ([a], [a])
+    circle :: a -> ([a], [a])
+    circle x = ([x], [])
 
+    curr :: ([a], [a]) -> ([a], [a])
+    curr (x, []) = ([], reverse x)
+    curr (x, y) = (x, y)
 
-    parse :: String -> (Int, Int)
-    parse line = remove ',' line & split ' ' & map toInt & tuplify2
+    next :: ([a], [a]) -> ([a], [a])
+    next ([], []) = ([], [])
+    next c@(xs, []) = next (curr c)
+    next (xs, y:ys) = (y:xs, ys)
 
-    type Point = (Int, Int)
-    data Area = Area {
-        idNum :: Int,
-        cardinality :: Cardinality,
-        points :: Set (Int, Int)
-    } deriving (Show)
-    data Cardinality = Finite | Infinite deriving (Eq, Show)
+    prev :: ([a], [a]) -> ([a], [a])
+    prev ([], []) = ([], [])
+    prev ([], ys) = prev (reverse ys, [])
+    prev (x:xs, ys) = (xs, x:ys)
 
+    removeMarble :: ([a], [a]) -> ([a], [a])
+    removeMarble ([], []) = ([], [])
+    removeMarble (xs, []) = removeMarble (curr (xs, []))
+    removeMarble (xs, y:ys) = (xs, ys)
 
-    -- create expansion
-    -- remove 
-    -- mark as infinite
+    insert :: a -> ([a], [a]) -> ([a], [a])
+    insert elem (xs, ys) = (xs, elem : ys)
+
+    getMarble :: ([a], [a]) -> a
+    getMarble c = let (x,y:ys) = (curr c) in y
+    
+    prev7 c = iterate prev c !! 7
+
+    -- part 1
+    problem = marbleGame players marbles
+
+    type GameState = (Int, Circle Int)
+
+    marbleGameMonad :: State GameState Int
+    marbleGameMonad = do
+        (turnNumber, circle) <- get
+        special <- return $ mod turnNumber 23 == 0
+        put (turnNumber+1, if not special
+            then circle & next & next & insert turnNumber
+            else circle & prev7 & removeMarble)
+        return $! (if special then turnNumber + (circle & prev7 & getMarble) else 0)
+
+    marbleGame players marbles =
+        evalState (mapM (const marbleGameMonad) [1..marbles]) (1, circle 0)
+        & aggScores players
+
+    aggScores :: Int -> [Int] -> (Int, Int)
+    aggScores players scores = scores 
+        & zip (cycle [1..players]) 
+        & foldl' (\map (player, points) -> M.insertWith (+) player points map) M.empty 
+        & M.toList 
+        & map swap 
+        & maximum
 
     -- part 2
 
-    problem2 :: [String] -> Int
-    problem2 lines = 2
+    marbles2 = marbles * 100
+    problem2 = marbleGame players marbles2
