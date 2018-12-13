@@ -28,7 +28,7 @@ def problem1():
 def find_order(tasks, dep):
     not_ready = set(map(lambda x: x[1], dep))
     best_task = list(sorted(tasks - not_ready))[0]
-    print(tasks - not_ready)
+    # print(tasks - not_ready)
 
     dep = list(filter(lambda x: x[0] != best_task, dep))
     tasks = tasks - {best_task}
@@ -43,7 +43,7 @@ def find_order(tasks, dep):
 def problem2():
     lines = read_input()
 
-    worker_count = 2
+    worker_count = 5
 
     dep = []
     for line in lines:
@@ -51,38 +51,38 @@ def problem2():
         dep.append([s[1], s[7]])
 
     all_tasks = set([task for d in dep for task in d])
-    t = dfs(all_tasks, dep, worker_count, [])
+    t = solve2(all_tasks, dep, [None] * worker_count)
     print("best time", t)
 
 
-def dfs(tasks, dep, work):
-    if not tasks:
-        return 0
+def solve2(tasks, dep, work):
+    steps = -1
+    while tasks:
+        steps += 1
 
-    # time_passed = 0
-    # if not idle_workers:
-        # raise "There should be idles"
-        # done_task, time_passed, work = run_workers(work)
-        # tasks = tasks - done_task
+        for i in range(len(work)):
+            if work[i]:
+                (time, task) = work[i]
+                if time > 1:
+                    work[i] = (time-1, task)
+                else:
+                    work[i] = None
+                    dep = list(filter(lambda x: x[0] != task, dep))
+                    tasks = tasks - {task}
 
-    time_passed = workers_time_left[0]
-    workers_time_left = list(map(lambda x: x-time_passed, workers_time_left[1:]))
+            if not work[i]:
+                ongoing = filter(lambda x: x, work)
+                in_progress = set(list(map(lambda x: x[1], ongoing)))
+                not_ready = set(map(lambda x: x[1], dep))
+                best_tasks = list(sorted(tasks - not_ready - in_progress))
 
-    not_ready = set(map(lambda x: x[1], dep))
-    ready = tasks - not_ready
+                if best_tasks:
+                    pick = best_tasks[0]
+                    work[i] = (task_time(pick), pick)
+                    print(steps, i, pick)
 
-    best_time = sys.maxsize
-    for selected_task in ready:
-        new_dep = list(filter(lambda x: x[0] != selected_task, dep))
-        new_tasks = tasks - {selected_task}
-        new_workers = list(sorted(workers_time_left + [task_time(selected_task)]))
+    return steps
 
-        time = dfs(new_tasks, new_dep, new_workers)
-        best_time = min(time, best_time)
-
-    print(tasks, "complete in", time_passed + best_time)
-
-    return time_passed + best_time
 
 def run_workers(work):
     first = work[0]
@@ -94,8 +94,8 @@ def run_workers(work):
 
 
 def task_time(task):
-    return 1 + ord(task) - ord('A')
-    # return 61 + ord(task) - ord('A')
+    # return 1 + ord(task) - ord('A')
+    return 61 + ord(task) - ord('A')
 
 
 def read_input():
