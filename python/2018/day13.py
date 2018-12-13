@@ -27,46 +27,61 @@ def problem1():
 
     for cnt in range(1000):
         print(cnt)
-        carts = sorted(carts)
-        for i in range(len(carts)):
-            c = carts[i]
-            (pos, d, count) = c
-            (y, x) = pos
 
-            part = track[y][x]
-            if part == "/":
-                if d == up:
-                    d = right
-                elif d == right:
-                    d = up
-                elif d == down:
-                    d = left
-                elif d == left:
-                    d = down
-            elif part == "\\":
-                if d == up:
-                    d = left
-                elif d == left:
-                    d = up
-                elif d == down:
-                    d = right
-                elif d == right:
-                    d = down
-            elif part == "+":
-                if count != 1:
-                    d = turn(d, count+1)
-                count = (count + 1) % 3
+        carts, crash = move_carts(track, carts)
+        if crash:
+            return
 
-            (yd, xd) = d
-            new_pos = (y + yd, x + xd)
-            carts[i] = (new_pos, (yd, xd), count)
 
-            for j in range(len(carts)):
-                oc = carts[j]
-                if i != j and c[0] == oc[0]:
-                    print("Collision", c[0][1], c[0][0])
-                    return
-        # show_state(track, carts)
+def move_carts(track, carts):
+    crashed = set()
+    carts = sorted(carts)
+    for i in range(len(carts)):
+        c = carts[i]
+        (pos, d, count) = c
+        (y, x) = pos
+
+        part = track[y][x]
+        if part == "/":
+            if d == up:
+                d = right
+            elif d == right:
+                d = up
+            elif d == down:
+                d = left
+            elif d == left:
+                d = down
+        elif part == "\\":
+            if d == up:
+                d = left
+            elif d == left:
+                d = up
+            elif d == down:
+                d = right
+            elif d == right:
+                d = down
+        elif part == "+":
+            if count != 1:
+                d = turn(d, count+1)
+            count = (count + 1) % 3
+
+        (yd, xd) = d
+        new_pos = (y + yd, x + xd)
+        carts[i] = (new_pos, (yd, xd), count)
+
+        for j in range(len(carts)):
+            oc = carts[j]
+            if i != j and c[0] == oc[0]:
+                print("Collision", c[0][1], c[0][0], len(carts))
+                crashed |= {i}
+                crashed |= {j}
+
+    new_carts = []
+    for i in range(len(carts)):
+        if i not in crashed:
+            new_carts.append(carts[i])
+
+    return new_carts, len(crashed) > 0
 
 
 up = (-1, 0)
@@ -125,7 +140,15 @@ def parse(lines):
 
 @util.timing
 def problem2():
-    pass
+    lines = util.read_input(filename)
+    track, carts = parse(lines)
+
+    for cnt in range(100000):
+        carts, crash = move_carts(track, carts)
+
+        if len(carts) == 1:
+            print(carts)
+            return
 
 
 if __name__ == '__main__':
