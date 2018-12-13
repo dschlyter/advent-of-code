@@ -11,7 +11,7 @@ import util
 
 from multiprocessing import Pool
 
-filename = 'input/day13_test.txt'
+filename = 'input/day13.txt'
 
 
 def main():
@@ -25,43 +25,72 @@ def problem1():
     track, carts = parse(lines)
     show_state(track, carts)
 
-    cnt = 0
-    while True:
-        cnt += 1
+    for cnt in range(1000):
         print(cnt)
         carts = sorted(carts)
         for i in range(len(carts)):
             c = carts[i]
-            (pos, direction, count) = c
+            (pos, d, count) = c
             (y, x) = pos
-            (yd, xd) = direction
 
             part = track[y][x]
+            if part == "/":
+                if d == up:
+                    d = right
+                elif d == right:
+                    d = up
+                elif d == down:
+                    d = left
+                elif d == left:
+                    d = down
+            elif part == "\\":
+                if d == up:
+                    d = left
+                elif d == left:
+                    d = up
+                elif d == down:
+                    d = right
+                elif d == right:
+                    d = down
+            elif part == "+":
+                if count != 1:
+                    d = turn(d, count+1)
+                count = (count + 1) % 3
 
-            if part ==
-
+            (yd, xd) = d
             new_pos = (y + yd, x + xd)
             carts[i] = (new_pos, (yd, xd), count)
 
             for j in range(len(carts)):
                 oc = carts[j]
                 if i != j and c[0] == oc[0]:
-                    print("Collision", c[0])
+                    print("Collision", c[0][1], c[0][0])
                     return
-
-
-
-def show_state(track, carts):
-    for l in track:
-        print(l)
-    print(carts)
+        # show_state(track, carts)
 
 
 up = (-1, 0)
 down = (1, 0)
-left = (-1, 0)
-right = (1, 0)
-dirs = [up, down, left, right]
+left = (0, -1)
+right = (0, 1)
+dirs = [up, left, down, right]
+
+
+def turn(direction, index):
+    i = dirs.index(direction)
+    return dirs[(len(dirs) + i + index) % len(dirs)]
+
+
+def show_state(track, carts):
+    cart_post = set(map(lambda x: x[0], carts))
+    for y in range(len(track)):
+        l = track[y]
+        for x in range(len(l)):
+            if (y, x) in cart_post:
+                print('X', end="")
+            else:
+                print(l[x], end="")
+        print("")
 
 
 def parse(lines):
