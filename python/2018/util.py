@@ -11,22 +11,31 @@ def read_input(filename):
 
 
 def parse_ints(filename):
-    token_lines = parse_tokens(filename, "[^-0-9 ]", " ")
+    lines = read_input(filename)
     ret = []
-    for t in token_lines:
-        print(t)
-        ret.append(list(map(int, t)))
+    for line in lines:
+        ret.append(parse_int_line(line))
     return ret
+
+
+def parse_int_line(line):
+    t = parse_token_line(line, "[^-0-9 ]", " ")
+    return list(map(int, t))
 
 
 def parse_tokens(filename, filter_regex, split_token):
     lines = read_input(filename)
     ret = []
     for line in lines:
-        tokens = re.sub(filter_regex, "", line).split(split_token)
-        no_empty = list(filter(lambda x: len(x) > 0, tokens))
-        ret.append(no_empty)
+        ret.append(parse_token_line(line, filter_regex, split_token))
     return ret
+
+
+def parse_token_line(line, filter_regex, split_token):
+    tokens = re.sub(filter_regex, "", line).split(split_token)
+    no_empty = list(filter(lambda x: len(x) > 0, tokens))
+    return no_empty
+
 
 # credit https://stackoverflow.com/questions/5478351/python-time-measure-function
 def timing(f):

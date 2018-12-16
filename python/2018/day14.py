@@ -65,8 +65,8 @@ def problem2():
         if match(scores, len(scores) - 1, target):
             break
         if match(scores, len(scores) - 2, target):
-            break
             m += 1
+            break
 
     for s in scores[-10:]:
         print(s, end="")
