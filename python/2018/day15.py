@@ -12,6 +12,7 @@ import util
 from multiprocessing import Pool
 
 filename = 'input/day15.txt'
+attack_power = 3
 
 
 def main():
@@ -27,7 +28,9 @@ def main():
     for f in fns:
         print(f)
         problem1(f)
-    problem2()
+    for f in fns:
+        print(f)
+        problem2(f)
 
 
 @util.timing
@@ -48,7 +51,7 @@ def problem1(file):
                 end = True
                 break
 
-            move(p, terrain, units)
+            move(p, terrain, units, 3)
 
         if end:
             break
@@ -65,7 +68,121 @@ def problem1(file):
     print(ticks * health_sum)
 
 
-def move(p, terrain, units):
+@util.timing
+def problem2(file):
+
+    # interestingly, the best search method is brute force
+    best, attack = brute_force(file)  # 10 seconds
+    # best, attack = binary_search(file, lambda l, u: (l+u) // 2)  # 13 seconds
+    # best, attack = binary_search(file, lambda l, u: (4*l+u) // 5)  # 10 seconds
+    # best, attack = binary_search(file, lambda l, u: l + math.floor(math.sqrt(u-l) - 0.1))  # 10 seconds
+    # best, attack = incrementing_binary_search(file)  # 12 seconds
+
+    (terrain, units, ticks) = best
+    print(ticks)
+    print_state(terrain, units)
+
+    print("attack", attack)
+    health_sum = sum(map(lambda u: u[HEALTH], units))
+    print(ticks * health_sum)
+
+
+def brute_force(file):
+    for attack in range(3, 201):
+        res = no_loss_battle(file, attack)
+
+        if res:
+            return res, attack
+
+
+def binary_search(file, next_test):
+    l, u = 3, 301
+    best_t = 301
+    best = None
+
+    # brute force
+    # binary search, but interestingly
+    while l < u:
+        t = next_test(l, u)
+
+        res = no_loss_battle(file, t)
+
+        if not res:
+            l = t+1
+        else:
+            u = t
+            if t < best_t:
+                best_t = t
+                best = res
+
+    return best, best_t
+
+
+def incrementing_binary_search(file):
+    l, u = 3, None
+    best_t = 301
+    best = None
+
+    while not u or l < u:
+        # double upper bound until it is established
+        if u is None:
+            t = (l-1) * 2
+        else:
+            t = (l + u) // 2
+
+        res = no_loss_battle(file, t)
+
+        if not res:
+            l = t+1
+        else:
+            u = t
+            if t < best_t:
+                best_t = t
+                best = res
+
+    return best, best_t
+
+
+def no_loss_battle(file, attack_power):
+    print("testing attack", attack_power)
+    lines = util.read_input("input/"+file+".txt")
+    terrain, units = parse_input(lines)
+
+    elves = len(list(filter(lambda u: u[TEAM] == 'E', units)))
+
+    ticks = 0
+    for i in range(10000):
+        end = False
+
+        player_order = pydash.sort_by(units, POS)
+        for p in player_order:
+            if p not in units:
+                continue
+
+
+            if len(set(map(lambda u: u[TEAM], units))) < 2:
+                end = True
+                break
+
+            ap = attack_power if p[TEAM] == 'E' else 3
+            move(p, terrain, units, ap)
+
+        alive = len(list(filter(lambda u: u[TEAM] == 'E', units)))
+        if alive < elves:
+            return False
+
+        if end:
+            break
+
+        ticks += 1
+
+        # print(ticks)
+        # print_state(terrain, units)
+
+    return terrain, units, ticks
+
+
+def move(p, terrain, units, attack_power):
     um = {}
     for u in units:
         um[u[POS]] = u
@@ -82,7 +199,7 @@ def move(p, terrain, units):
 
     if attackable:
         target = attackable[0]
-        target[HEALTH] -= 3
+        target[HEALTH] -= attack_power
         if target[HEALTH] <= 0:
             units.remove(target)
 
@@ -91,6 +208,7 @@ def bfs(player, terrain, unit_map):
     q = Queue()
     visited = set()
     solutions = []
+    best_dist = 9001
 
     for p in nearby(player[POS]):
         q.put((1, p, p))
@@ -98,6 +216,8 @@ def bfs(player, terrain, unit_map):
     while not q.empty():
         item = q.get()
         (dist, pos, move) = item
+        if dist > best_dist:
+            continue
         (y, x) = pos
         if terrain[y][x] != ".":
             continue
@@ -109,6 +229,7 @@ def bfs(player, terrain, unit_map):
         if u:
             if u[TEAM] != player[TEAM]:
                 solutions.append(item)
+                best_dist = dist
             continue
 
         for np in nearby(pos):
@@ -168,11 +289,6 @@ HEALTH = 'health'
 POS = 'pos'
 TEAM = 'team'
 ID = 'id'
-
-
-@util.timing
-def problem2():
-    lines = util.read_input(filename)
 
 
 if __name__ == '__main__':
