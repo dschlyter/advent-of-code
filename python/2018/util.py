@@ -32,7 +32,7 @@ def parse_tokens(filename, filter_regex, split_token):
 
 
 def parse_token_line(line, filter_regex, split_token):
-    tokens = re.sub(filter_regex, "", line).split(split_token)
+    tokens = re.sub(filter_regex, split_token, line).split(split_token)
     no_empty = list(filter(lambda x: len(x) > 0, tokens))
     return no_empty
 
