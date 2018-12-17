@@ -31,28 +31,42 @@ def problem1():
     source = (500, ymin)
 
     water = set()
-    dfs(clay, water, source, ymax)
+    drained = set()
+    dfs(clay, water, drained, source, ymax)
+
+    util.print_states(clay, "#", water, ".", drained, "_", flip=True)
     print(len(water))
-    print(sorted(list(water)))
+    print(len(water) - len(drained))
 
 
-def dfs(clay, water, point, ymax):
+def dfs(clay, water, drained, point, ymax):
     (x, y) = point
-    if y > ymax:
+    if y > ymax or point in drained:
+        return True
+    if point in clay or point in water:
         return False
-    if point in water:
-        return True
-    if point in clay:
-        return True
 
     water |= {point}
 
-    d = dfs(clay, water, (x, y+1), ymax)
-    if not d:
-        return False
-    l = dfs(clay, water, (x-1, y), ymax)
-    r = dfs(clay, water, (x+1, y), ymax)
-    return l and r
+    d = dfs(clay, water, drained, (x, y+1), ymax)
+    if d:
+        drain_plane(water, drained, point)
+        return True
+    l = dfs(clay, water, drained, (x-1, y), ymax)
+    r = dfs(clay, water, drained, (x+1, y), ymax)
+    if l or r:
+        drain_plane(water, drained, point)
+        return True
+
+    return False
+
+
+def drain_plane(water, drained, point):
+    if point in water and point not in drained:
+        drained |= {point}
+        (x, y) = point
+        drain_plane(water, drained, (x+1, y))
+        drain_plane(water, drained, (x-1, y))
 
 
 def parse(lines):
