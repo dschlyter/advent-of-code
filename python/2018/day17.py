@@ -19,8 +19,6 @@ def main():
     problem1()
     problem2()
 
-# 73425 too high
-
 
 @util.timing
 def problem1():
