@@ -58,6 +58,7 @@ def dist1(bot, other_bot):
 
 @util.timing
 def problem2(filename):
+    print("You should run this with pypy, or be prepared to wait hours")
     lines = util.parse_ints(filename)
 
     bots = []
@@ -65,19 +66,37 @@ def problem2(filename):
         [x, y, z, r] = l
         bots.append(((x, y, z), r))
 
-    # output from previous algo (see git history)
-    best_found = (38087687, 35655074, 51789845)
+    # begin with the best bot position
+    # using center and edge positions
+    best_score = sys.maxsize
+    best_found = None
+    for b in bots:
+        for x in [-1, 0, 1]:
+            for y in [-1, 0, 1]:
+                for z in [-1, 0, 1]:
+                    (xc, yc, zc) = b[0]
+                    r = b[1]
+                    p = (xc+x*r, yc+y*r, zc+z*r)
+                    score = annealing_score(bots, p)
+                    if score < best_score:
+                        best_score = score
+                        best_found = p
 
-    # best_found = (38579851, 32763608, 49390532)
-    # best_found = (38087689, 35655078, 51789840)
+    # TODO you need to enable this to get the right answer (you can also tune down time)
+    # output from previous algo (see git history)
+    # best_found = (38087687, 35655074, 51789845)
+
     print(best_found)
     ra = RangeAnnealer(bots, best_found)
+    run_time_minutes = 5
+    schedule = ra.auto(run_time_minutes)
+    print("found schedule", schedule)
+    ra.set_schedule(schedule)
     point, score = ra.anneal()
 
     print("answer", point, score, range_count(bots, point), dist((0, 0, 0), point))
 
-    # (38087687, 35655074, 51789845) 125532606 is too low (931 bots) (from edge run)
-    # (38087689, 35655078, 51789840) 125532606 is the right answer (from anealing)
+    # (38087689, 35655078, 51789840) 125532606 with 942 bots is the right answer (from anealing)
 
 
 class RangeAnnealer(Annealer):
@@ -111,96 +130,10 @@ def r2():
     return random.random() * 2 - 1
 
 
-# run across the edges of all range zone (diamond shaped)
-def run_line(bots, p, r, sign1, sign2, index2):
-    best_count = 0
-    best_p = 0
-    i = 0
-    while i < r+1:
-        pl = list(p)
-        pl[2] += i * sign1
-        pl[index2] += (r-i) * sign2
-        pt = tuple(pl)
-
-        count, skip = score_point(bots, pt)
-        if count > best_count:
-            best_count = count
-            best_p = pt
-
-        next_i = i + 1
-        max_skip = min(r-1, i+skip)
-        i = max(next_i, max_skip)
-
-    return best_p, best_count
-
-
-# magic number from previous bad solution
-BOTS = 898
-
-
-def score_point(bots, p):
-
-    count = 0
-    distances = []
-    for b in bots:
-        d = dist(b[0], p)
-        distance_left = d - b[1]
-        distances.append(distance_left)
-        if distance_left <= 0:
-            count += 1
-
-    skip = 0
-    if len(distances) > BOTS:
-        # hack to make runtime not enormous
-        # if we are below the known best solution, skip ahead until we are at a possible point
-        distances = sorted(distances)
-        if count < BOTS:
-            skip = distances[BOTS-1]
-        else:
-            # TODO this might not be good - but cool if we add descent?
-            skip = distances[count]
-
-    return count, skip
-
-
 def dist(p, p2):
     (x, y, z) = p
     (xb, yb, zb) = p2
     return abs(xb - x) + abs(yb - y) + abs(zb - z)
-
-
-# gravitate towards the center, as long as range is the same
-def origin_closest_score(bots, point):
-    c = range_count(bots, point)
-    return -c, dist((0, 0, 0), point)
-
-
-def descent(bots, point, score_fn):
-    p = point
-    while True:
-        best_n = p
-        best_score = score_fn(bots, point)
-        for point in nearby(point):
-            s = score_fn(bots, point)
-            if s < best_score:
-                best_score = s
-                best_n = p
-        if best_n == p:
-            break
-        p = best_n
-    return p
-
-
-def nearby(point):
-    [x, y, z] = point
-    return [
-        [x-1, y, z],
-        [x+1, y, z],
-        [x, y-1, z],
-        [x, y+1, z],
-        [x, y, z-1],
-        [x, y, z+1]
-    ]
 
 
 def range_count(bots, point):
