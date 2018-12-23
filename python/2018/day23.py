@@ -18,7 +18,7 @@ import util
 from multiprocessing import Pool
 
 sys.setrecursionlimit(15000)
-input_name = 'input/day23.txt'
+input_name = 'input/day23'
 
 
 def main():
@@ -76,12 +76,12 @@ def problem2(filename):
         r = bot[1]
         for args in [
             (-1, -1, 0),
-            (-1, 1, 0),
             (-1, -1, 1),
+            (-1, 1, 0),
             (-1, 1, 1),
             (1, -1, 0),
-            (1, 1, 0),
             (1, -1, 1),
+            (1, 1, 0),
             (1, 1, 1)
         ]:
             (sign1, sign2, index2) = args
@@ -106,28 +106,30 @@ def problem2(filename):
 
 
 # run across the edges of all range zone (diamond shaped)
-def run_line(bots, p, r, sign1, sign2, i2):
+def run_line(bots, p, r, sign1, sign2, index2):
     best_count = 0
     best_p = 0
     i = 0
     while i < r+1:
         pl = list(p)
         pl[2] += i * sign1
-        pl[i2] += (r-i) * sign2
-        pt = tuple(p)
+        pl[index2] += (r-i) * sign2
+        pt = tuple(pl)
 
         count, skip = score_point(bots, pt)
         if count > best_count:
             best_count = count
             best_p = pt
 
-        i += max(1, skip)
+        next_i = i + 1
+        max_skip = min(r-1, i+skip)
+        i = max(next_i, max_skip)
 
     return best_p, best_count
 
 
 # magic number from previous bad solution
-BOTS = 826
+BOTS = 898
 
 
 def score_point(bots, p):
@@ -149,6 +151,7 @@ def score_point(bots, p):
         if count < BOTS:
             skip = distances[BOTS-1]
         else:
+            # TODO this might not be good - but cool if we add descent?
             skip = distances[count]
 
     return count, skip
