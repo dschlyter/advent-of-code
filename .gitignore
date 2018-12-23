@@ -143,3 +143,5 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 
+
+pypy-env
