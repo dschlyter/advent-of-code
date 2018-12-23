@@ -18,7 +18,7 @@ import util
 from multiprocessing import Pool
 
 sys.setrecursionlimit(15000)
-input_name = 'input/day23'
+input_name = 'input/day23.txt'
 
 
 def main():
@@ -36,7 +36,7 @@ def problem1(filename):
     best_bot = 0
 
     for l in lines:
-        [x, y, z, r] = l
+        r = l[3]
         if r > best_range:
             best_range = r
             best_bot = l
@@ -67,29 +67,31 @@ def problem2(filename):
     # gradient descent
     best_count = 0
     points = set()
+    i = 0
     for bot in bots:
-        (x, y, z) = bot[0]
+        i += 1
+        print("processing bot", i)
+
+        p = bot[0]
         r = bot[1]
-        edge_points = [
-            (x-r, y, z),
-            (x+r, y, z),
-            (x, y-r, z),
-            (x, y+r, z),
-            (x, y, z-r),
-            (x, y, z+r)
-        ]
-        for e in edge_points:
-            p = descent(bots, e, max_range_score)
-            c = range_count(bots, p)
-            if c > best_count:
-                best_count = c
+        for args in [
+            (-1, -1, 0),
+            (-1, 1, 0),
+            (-1, -1, 1),
+            (-1, 1, 1),
+            (1, -1, 0),
+            (1, 1, 0),
+            (1, -1, 1),
+            (1, 1, 1)
+        ]:
+            (sign1, sign2, index2) = args
+            best_p, count = run_line(bots, p, r, sign1, sign2, index2)
+            if count > best_count:
+                best_count = count
                 points = set()
-                points.add(p)
-                if best_count == 898:
-                    if p == e:
-                        print("why u even descent?")
-            elif c == best_count:
-                points.add(p)
+                points.add(best_p)
+            elif count == best_count:
+                points.add(best_p)
 
     # turns out none of the descents were needed
     print("in range", best_count)
@@ -98,10 +100,58 @@ def problem2(filename):
         p2 = descent(bots, p, origin_closest_score)
         print("descent2", p2, dist((0, 0, 0), p2))
 
-    # 121687132 is too low
+    # (36164950, 35655074, 49867108) 121687132 is too low. i.e. there are more than 898 bots
+    # (38268620, 40447328, 46521286) 125237234 is too low (only 826 bots here, wtf)
+    # 19648 980352 out / in range
 
 
-# 19648 980352 out / in range
+# run across the edges of all range zone (diamond shaped)
+def run_line(bots, p, r, sign1, sign2, i2):
+    best_count = 0
+    best_p = 0
+    i = 0
+    while i < r+1:
+        pl = list(p)
+        pl[2] += i * sign1
+        pl[i2] += (r-i) * sign2
+        pt = tuple(p)
+
+        count, skip = score_point(bots, pt)
+        if count > best_count:
+            best_count = count
+            best_p = pt
+
+        i += max(1, skip)
+
+    return best_p, best_count
+
+
+# magic number from previous bad solution
+BOTS = 826
+
+
+def score_point(bots, p):
+
+    count = 0
+    distances = []
+    for b in bots:
+        d = dist(b[0], p)
+        distance_left = d - b[1]
+        distances.append(distance_left)
+        if distance_left <= 0:
+            count += 1
+
+    skip = 0
+    if len(distances) > BOTS:
+        # hack to make runtime not enormous
+        # if we are below the known best solution, skip ahead until we are at a possible point
+        distances = sorted(distances)
+        if count < BOTS:
+            skip = distances[BOTS-1]
+        else:
+            skip = distances[count]
+
+    return count, skip
 
 
 def dist(p, p2):
@@ -113,12 +163,13 @@ def dist(p, p2):
 # gravitate towards better points
 def max_range_score(bots, point):
     score = 0
+    c = range_count(bots, point)
     for bot in bots:
         d = dist(bot[0], point)
         until_range = d - bot[1]
         if until_range > 0:
             score += 1 / until_range
-    return score
+    return -c, score
 
 
 # gravitate towards the center, as long as range is the same
