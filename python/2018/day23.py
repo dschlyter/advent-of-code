@@ -18,7 +18,7 @@ import util
 from multiprocessing import Pool
 
 sys.setrecursionlimit(15000)
-input_name = 'input/day23_test'
+input_name = 'input/day23'
 
 
 def main():
@@ -43,13 +43,13 @@ def problem1(filename):
 
     count = 0
     for bot in lines:
-        if dist(bot, best_bot) <= best_range:
+        if dist1(bot, best_bot) <= best_range:
             count += 1
 
     print(count)
 
 
-def dist(bot, other_bot):
+def dist1(bot, other_bot):
     [x, y, z, r] = bot
     [xb, yb, zb, rb] = other_bot
     return abs(xb - x) + abs(yb - y) + abs(zb - z)
@@ -59,68 +59,100 @@ def dist(bot, other_bot):
 def problem2(filename):
     lines = util.parse_ints(filename)
 
-    best_range = 0
-    best_bot = 0
-
+    bots = []
     for l in lines:
         [x, y, z, r] = l
-        if r > best_range:
-            best_range = r
-            best_bot = l
+        bots.append(((x, y, z), r))
 
-    points = []
-    for i in range(10000):
-        [x, y, z, r] = best_bot
-        r1, r2, r3, r4 = random.random(), random.random(), random.random(), random.random()
-        s = sum([r1, r2, r3, r4])
-        r1 = r1 / s
-        r2 = r2 / s
-        r3 = r3 / s
-        # the distance that is unused
-        r4 = r4 / s
-        xr = math.floor(x + sign() * r1 * r)
-        yr = math.floor(y + sign() * r2 * r)
-        zr = math.floor(z + sign() * r3 * r)
-        points.append([xr, yr, zr, -1])
-
+    # gradient descent
     best_count = 0
-    best_point = 0
+    points = set()
+    for bot in bots:
+        (x, y, z) = bot[0]
+        r = bot[1]
+        edge_points = [
+            (x-r, y, z),
+            (x+r, y, z),
+            (x, y-r, z),
+            (x, y+r, z),
+            (x, y, z-r),
+            (x, y, z+r)
+        ]
+        for e in edge_points:
+            p = descent(bots, e, max_range_score)
+            c = range_count(bots, p)
+            if c > best_count:
+                best_count = c
+                points = set()
+                points.add(p)
+                if best_count == 898:
+                    if p == e:
+                        print("why u even descent?")
+            elif c == best_count:
+                points.add(p)
+
+    # turns out none of the descents were needed
+    print("in range", best_count)
     for p in points:
-        count = range_count(lines, p)
-        if count > best_count:
-            best_point = p
-            best_count = count
-    print(best_count)
+        print(p, dist((0, 0, 0), p))
+        p2 = descent(bots, p, origin_closest_score)
+        print("descent2", p2, dist((0, 0, 0), p2))
 
+    # 121687132 is too low
+
+
+# 19648 980352 out / in range
+
+
+def dist(p, p2):
+    (x, y, z) = p
+    (xb, yb, zb) = p2
+    return abs(xb - x) + abs(yb - y) + abs(zb - z)
+
+
+# gravitate towards better points
+def max_range_score(bots, point):
+    score = 0
+    for bot in bots:
+        d = dist(bot[0], point)
+        until_range = d - bot[1]
+        if until_range > 0:
+            score += 1 / until_range
+    return score
+
+
+# gravitate towards the center, as long as range is the same
+def origin_closest_score(bots, point):
+    c = range_count(bots, point)
+    return -c, dist((0, 0, 0), point)
+
+
+def descent(bots, point, score_fn):
+    p = point
     while True:
-        stepped = False
-
-        [x, y, z, r] = best_point
-        nx = [smaller(x), y, z, r]
-        if nx != best_point and range_count(lines, nx) >= best_count:
-            best_point = nx
-            stepped = True
-
-        [x, y, z, r] = best_point
-        ny = [x, smaller(y), z, r]
-        if ny != best_point and range_count(lines, ny) >= best_count:
-            best_point = ny
-            stepped = True
-
-        [x, y, z, r] = best_point
-        nz = [x, y, smaller(z), r]
-        if nz != best_point and range_count(lines, nz) >= best_count:
-            best_point = nz
-            stepped = True
-
-        if not stepped:
+        best_n = p
+        best_score = score_fn(bots, point)
+        for point in nearby(point):
+            s = score_fn(bots, point)
+            if s < best_score:
+                best_score = s
+                best_n = p
+        if best_n == p:
             break
+        p = best_n
+    return p
 
-    print(dist(best_point, [0, 0, 0, 0]), best_point, best_count)
 
-
-def in_range(point, bot):
-    return dist(bot, point) <= bot[3]
+def nearby(point):
+    [x, y, z] = point
+    return [
+        [x-1, y, z],
+        [x+1, y, z],
+        [x, y-1, z],
+        [x, y+1, z],
+        [x, y, z-1],
+        [x, y, z+1]
+    ]
 
 
 def range_count(bots, point):
@@ -131,8 +163,8 @@ def range_count(bots, point):
     return count
 
 
-def sign():
-    return random.choice([-1, 1])
+def in_range(point, bot):
+    return dist(bot[0], point) <= bot[1]
 
 
 def smaller(x):
