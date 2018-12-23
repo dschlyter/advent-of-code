@@ -16,6 +16,7 @@ import sys
 import util
 
 from multiprocessing import Pool
+from simanneal import Annealer
 
 sys.setrecursionlimit(15000)
 input_name = 'input/day23.txt'
@@ -64,42 +65,34 @@ def problem2(filename):
         [x, y, z, r] = l
         bots.append(((x, y, z), r))
 
-    xs = [b[0][0] for b in bots]
-    xa = sum(xs) / len(bots)
-    ya = sum([b[0][1] for b in bots]) / len(bots)
-    za = sum([b[0][2] for b in bots]) / len(bots)
+    # output from previous algo (see git history)
+    best_found = (38087687, 35655074, 51789845)
 
-    # gradient descent
-    best_p = (xa, ya, za)
-    best_score = annealing_score(bots, best_p)
+    # best_found = (38579851, 32763608, 49390532)
+    # best_found = (38087689, 35655078, 51789840)
+    print(best_found)
+    ra = RangeAnnealer(bots, best_found)
+    point, score = ra.anneal()
 
-    iterations = 1000000
-    max_dist = (max(xs) - min(xs)) / 10
-    rounds = math.ceil(math.log2(max_dist))
-    for i in range(iterations):
-        if i % 100000 == 0:
-            print(i)
-        curr_round = round((i / iterations) * rounds)
-        curr_dist = 2 ** (rounds - curr_round)
+    print("answer", point, score, range_count(bots, point), dist((0, 0, 0), point))
 
-        (x, y, z) = best_p
-        new_p = (x + r2()*curr_dist, y + r2()*curr_dist, z+r2()*curr_dist)
-        new_score = annealing_score(bots, new_p)
-        if new_score < best_score:
-            print("new best", "point", new_p, "score", new_score, "dist", curr_dist, "iteration", i)
-            best_score = new_score
-            best_p = new_p
+    # (38087687, 35655074, 51789845) 125532606 is too low (931 bots) (from edge run)
+    # (38087689, 35655078, 51789840) 125532606 is the right answer (from anealing)
 
-    # turns out none of the descents were needed
-    print("in range", best_score)
-    for p in [best_p]:
-        print(p, dist((0, 0, 0), p))
-        p2 = descent(bots, p, origin_closest_score)
-        print("descent2", p2, dist((0, 0, 0), p2))
 
-    # (36164950, 35655074, 49867108) 121687132 is too low. i.e. there are more than 898 bots
-    # (38268620, 40447328, 46521286) 125237234 is too low (only 826 bots here, wtf)
-    # 19648 980352 out / in range
+class RangeAnnealer(Annealer):
+    def __init__(self, bots, p):
+        self.bots = bots
+        self.state = p
+
+    def move(self):
+        l = list(self.state)
+        index = random.randint(0, 2)
+        l[index] += random.choice([-1, 1])
+        self.state = tuple(l)
+
+    def energy(self):
+        return annealing_score(self.bots, self.state)
 
 
 # gravitate towards better points
@@ -111,7 +104,7 @@ def annealing_score(bots, point):
         until_range = d - bot[1]
         if until_range > 0:
             score += 1 / until_range
-    return -c, dist((0,0,0), point), score
+    return -c * 10000000 + max(0, dist((0,0,0), point)) + score * 0.01
 
 
 def r2():
