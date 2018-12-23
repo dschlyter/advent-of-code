@@ -18,7 +18,7 @@ import util
 from multiprocessing import Pool
 
 sys.setrecursionlimit(15000)
-input_name = 'input/day23'
+input_name = 'input/day23.txt'
 
 
 def main():
@@ -64,38 +64,35 @@ def problem2(filename):
         [x, y, z, r] = l
         bots.append(((x, y, z), r))
 
-    # gradient descent
-    best_count = 0
-    points = set()
-    i = 0
-    for bot in bots:
-        i += 1
-        print("processing bot", i)
+    xs = [b[0][0] for b in bots]
+    xa = sum(xs) / len(bots)
+    ya = sum([b[0][1] for b in bots]) / len(bots)
+    za = sum([b[0][2] for b in bots]) / len(bots)
 
-        p = bot[0]
-        r = bot[1]
-        for args in [
-            (-1, -1, 0),
-            (-1, -1, 1),
-            (-1, 1, 0),
-            (-1, 1, 1),
-            (1, -1, 0),
-            (1, -1, 1),
-            (1, 1, 0),
-            (1, 1, 1)
-        ]:
-            (sign1, sign2, index2) = args
-            best_p, count = run_line(bots, p, r, sign1, sign2, index2)
-            if count > best_count:
-                best_count = count
-                points = set()
-                points.add(best_p)
-            elif count == best_count:
-                points.add(best_p)
+    # gradient descent
+    best_p = (xa, ya, za)
+    best_score = annealing_score(bots, best_p)
+
+    iterations = 1000000
+    max_dist = (max(xs) - min(xs)) / 10
+    rounds = math.ceil(math.log2(max_dist))
+    for i in range(iterations):
+        if i % 100000 == 0:
+            print(i)
+        curr_round = round((i / iterations) * rounds)
+        curr_dist = 2 ** (rounds - curr_round)
+
+        (x, y, z) = best_p
+        new_p = (x + r2()*curr_dist, y + r2()*curr_dist, z+r2()*curr_dist)
+        new_score = annealing_score(bots, new_p)
+        if new_score < best_score:
+            print("new best", "point", new_p, "score", new_score, "dist", curr_dist, "iteration", i)
+            best_score = new_score
+            best_p = new_p
 
     # turns out none of the descents were needed
-    print("in range", best_count)
-    for p in points:
+    print("in range", best_score)
+    for p in [best_p]:
         print(p, dist((0, 0, 0), p))
         p2 = descent(bots, p, origin_closest_score)
         print("descent2", p2, dist((0, 0, 0), p2))
@@ -103,6 +100,22 @@ def problem2(filename):
     # (36164950, 35655074, 49867108) 121687132 is too low. i.e. there are more than 898 bots
     # (38268620, 40447328, 46521286) 125237234 is too low (only 826 bots here, wtf)
     # 19648 980352 out / in range
+
+
+# gravitate towards better points
+def annealing_score(bots, point):
+    score = 0
+    c = range_count(bots, point)
+    for bot in bots:
+        d = dist(bot[0], point)
+        until_range = d - bot[1]
+        if until_range > 0:
+            score += 1 / until_range
+    return -c, dist((0,0,0), point), score
+
+
+def r2():
+    return random.random() * 2 - 1
 
 
 # run across the edges of all range zone (diamond shaped)
@@ -161,18 +174,6 @@ def dist(p, p2):
     (x, y, z) = p
     (xb, yb, zb) = p2
     return abs(xb - x) + abs(yb - y) + abs(zb - z)
-
-
-# gravitate towards better points
-def max_range_score(bots, point):
-    score = 0
-    c = range_count(bots, point)
-    for bot in bots:
-        d = dist(bot[0], point)
-        until_range = d - bot[1]
-        if until_range > 0:
-            score += 1 / until_range
-    return -c, score
 
 
 # gravitate towards the center, as long as range is the same
