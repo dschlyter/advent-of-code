@@ -32,9 +32,6 @@ def main():
 def problem1(filename):
     lines = util.read_input(filename)
     armies = parse(lines)
-    for army in armies:
-        pprint(list(map(lambda x: x.pprint(), army)))
-        pass
     remaining = fight(armies[0] + armies[1])
     s = sum(map(lambda a: a.size, remaining))
     print(s)
@@ -43,9 +40,13 @@ def problem1(filename):
 
 
 def fight(armies):
-    display(armies)
+    # display(armies)
+
+    iterations = 0
 
     while len(set(map(lambda x: x.side, armies))) > 1:
+        iterations += 1
+
         # target selection
         armies = sorted(armies, key=lambda a: a.priority(), reverse=True)
         targets = {}
@@ -70,6 +71,7 @@ def fight(armies):
 
         # attack
         armies = sorted(armies, key=lambda a: a.initiative, reverse=True)
+        kills = False
 
         for army in armies:
             target_id = targets.get(army.id)
@@ -80,8 +82,13 @@ def fight(armies):
             target = next(filter(lambda a: a.id == target_id, armies))
             d = target.damage_from(army)
             loss = d // target.hp
+            if loss > 0:
+                kills = True
             target.size -= loss
             # print(army.id, "attacks", target.id, "killing", loss)
+
+        if not kills:
+            return None
 
         armies = list(filter(lambda a: a.size > 0, armies))
         # display(armies)
@@ -176,14 +183,25 @@ class Army:
 
 @util.timing
 def problem2(filename):
-    lines = util.read_input(filename)
-    armies = parse(lines)
-    for army in armies:
-        pprint(list(map(lambda x: x.pprint(), army)))
-        pass
-    remaining = fight(armies[0] + armies[1])
-    s = sum(map(lambda a: a.size, remaining))
-    print(s)
+    for boost in range(10000):
+        lines = util.read_input(filename)
+
+        armies = parse(lines)
+
+        for a in armies[0]:
+            a.damage += boost
+
+        remaining = fight(armies[0] + armies[1])
+        if remaining is None:
+            continue
+
+        s = sum(map(lambda a: a.size, remaining))
+        team = None
+        if len(remaining):
+            team = remaining[0].side
+        print(boost, s, team)
+        if team == 1:
+            return
 
 
 if __name__ == '__main__':
