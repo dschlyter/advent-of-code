@@ -1,49 +1,89 @@
+import math
+import random
+import sys
+
+import glob
+import time
+from datetime import datetime
+
 import pydash
 
 from string import ascii_lowercase
-from queue import Queue
+from queue import Queue, PriorityQueue
+import re
+import sys
 
-filename = 'input/day6.txt'
+import util
+
+from pprint import pprint
+
+sys.setrecursionlimit(15000)
+input_name = 'input/day6'
 
 
 def main():
-    problem1()
-    problem2()
+    files = glob.glob(f"{input_name}*")
+    for file in sorted(files, reverse=True):
+        print("Running file", file)
+        problem1(file)
+        problem2(file)
 
 
-def problem1():
-    lines = read_input()
+@util.timing
+def problem1(filename):
+    points = util.parse_ints(filename)
 
-    points = []
-    for line in lines:
-        s = line.replace(",", "").split(" ")
-        print(s)
-        points.append(list(map(int, s)))
+    fields = {}
+    infinite = set()
 
-    grid = [[0] * 1000] * 1000
-    print(grid)
-
-    q = Queue()
-    i = 1
     for p in points:
-        grid[p[0]][p[1]] = i
-        q.put((p, i))
+        fields[tuple(p)] = set()
 
-    while not q.empty():
-        (p, c) = q.get()
+    max_size = 400
+    for x in range(max_size+1):
+        for y in range(max_size+1):
+            best_dist = sys.maxsize
+            best_point = None
+
+            for p in points:
+                d = dist(p, (x, y))
+                if d < best_dist:
+                    best_dist = d
+                    best_point = p
+                elif d == best_dist:
+                    best_point = None
+
+            if best_point is not None:
+                bp = tuple(best_point)
+                if x == 0 or y == 0 or x == max_size or y == max_size:
+                    infinite.add(bp)
+                fields[bp].add((x, y))
+
+    best_size = 0
+    best_point = None
+    for pl in points:
+        p = tuple(pl)
+        if p in infinite:
+            continue
+        size = len(fields.get(p, set()))
+        if size > best_size:
+            best_size = size
+            best_point = p
+
+    print(best_size, best_point)
+
+    # 3010 is too low
 
 
+def dist(p1, p2):
+    return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
-def problem2():
-    lines = read_input()
 
+@util.timing
+def problem2(filename):
+    points = util.parse_ints(filename)
 
-def read_input():
-    with open(filename) as file:
-        lines = file.read().split("\n")
-        if lines[-1] == '':
-            lines = lines[:-1]
-        return lines
+    max_dist = 10000 if len(points) > 30 else 32
 
 
 if __name__ == '__main__':
