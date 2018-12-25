@@ -1,4 +1,4 @@
-module Day3 where
+module Day6 where
 
     import Debug.Trace
 
@@ -16,6 +16,9 @@ module Day3 where
 
     input = load 6
 
+    maxSize = 300
+    allPoints = [(x,y) | x <- [0..maxSize], y <- [0..maxSize]]
+
     main :: IO()
     main = do
         l <- input
@@ -25,59 +28,15 @@ module Day3 where
     -- problem :: [String] -> Int
     problem lines = lines
         & map parse
-        & zip [1..]
-        & map createArea
-        & expandLoop
-        & filter ((== Finite) . cardinality)
-        & maxByKey (\x -> length $ points x)
-        & (length . points)
-
-
-    parse :: String -> (Int, Int)
-    parse line = remove ',' line & split ' ' & map toInt & tuplify2
+        & intoMap
 
     type Point = (Int, Int)
-    data Area = Area {
-        idNum :: Int,
-        cardinality :: Cardinality,
-        points :: Set (Int, Int)
-    } deriving (Show)
-    data Cardinality = Finite | Infinite deriving (Eq, Show)
 
-    createArea :: (Int,(Int,Int)) -> Area
-    createArea (index,pos) = Area {idNum=index, cardinality=Finite, points=S.singleton pos}
+    parse :: String -> Point
+    parse line = remove ',' line & split ' ' & map toInt & tuplify2
 
-    expandLoop :: [Area] -> [Area]
-    expandLoop areas = expandLoopInner areas S.empty
-    -- expandLoop areas equalPoints = map (\area -> expand area (border (points area))) areas
-
-    expandLoopInner :: [Area] -> Set Point -> [Area]
-    expandLoopInner areas equalPoints = 
-        let borderAreas = trace (show (length equalPoints)) map (\a -> (a, border $ points a)) areas
-            expandedEqualPoints = S.union equalPoints (equalPoints & border & S.filter (not . outOfBounds))
-            newEqualPoints = S.union expandedEqualPoints (map snd borderAreas & concatMap S.toList & sort & group & filter (\x -> (length x) > 1) & map head & S.fromList)
-            newAreas = map (\(area, points) -> expand area (S.difference points newEqualPoints)) borderAreas
-            in if (sizeSum newAreas) > (sizeSum areas) 
-                then expandLoopInner newAreas newEqualPoints
-                else newAreas
-
-    border :: Set Point -> Set Point
-    border points = concatMap nearby points & S.fromList & (flip S.difference) points
-
-    nearby :: Point -> [Point]
-    nearby (x,y) = [(x-1,y), (x+1,y), (x,y-1), (x,y+1)]
-
-    expand :: Area -> Set Point -> Area
-    expand area newPoints = 
-        let inf = (any outOfBounds newPoints)
-            newValid = S.filter (not . outOfBounds) newPoints in
-        area { cardinality = if inf then Infinite else (cardinality area), points = S.union (points area) newValid}
-
-    outOfBounds :: (Int, Int) -> Bool
-    outOfBounds (x,y) = x < 0 || y < 0 || x > 350 || y > 350
-
-    sizeSum :: [Area] -> Int
-    sizeSum areas = map (length . points) areas & foldr (+) 0
+    intoMap :: [Point] -> M.Map Point [Point]
+    intoMap points = M.fromList $ zip points (repeat [])
 
     -- create expansion
     -- remove 
