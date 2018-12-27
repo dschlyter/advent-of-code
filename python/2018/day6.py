@@ -84,6 +84,25 @@ def problem2(filename):
     points = util.parse_ints(filename)
 
     max_dist = 10000 if len(points) > 30 else 32
+    max_start_dist = max_dist // len(points)
+
+    xmin = min([p[0] for p in points])
+    xmax = max([p[0] for p in points])
+    ymin = min([p[1] for p in points])
+    ymax = max([p[1] for p in points])
+
+    area_size = 0
+    for x in range(xmin - max_start_dist, xmax + max_start_dist):
+        for y in range(ymin - max_start_dist, ymax + max_start_dist):
+            total = 0
+            for p in points:
+                total += dist(p, (x, y))
+            if total < max_dist:
+                area_size += 1
+
+    print(area_size)
+
+
 
 
 if __name__ == '__main__':
