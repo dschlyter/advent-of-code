@@ -8,5 +8,5 @@ day=$1
 
 while inotifywait -e close_write day$day.rs; do
     clear
-    timeout 60 run.sh $day
+    timeout 60 run.sh "$@" || true
 done
