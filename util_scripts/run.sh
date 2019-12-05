@@ -2,7 +2,7 @@
 
 # http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
-IFS=$'\n\t'
+# IFS=$'\n\t'
 
 day=$1
 program=$(echo "day"$1*)
@@ -11,7 +11,7 @@ input=${2:-}
 
 if [[ "$program" == *.rs ]]; then
     rustc $program -o program
-    ex="./program"
+    ex="timeout 10 $(pwd)/program"
 else
     echo "Unsupported program $program"
     exit 1
