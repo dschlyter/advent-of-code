@@ -22,3 +22,10 @@ curl "https://adventofcode.com/$curr_year/day/$date/input" \
 
 echo Fecthed "input/day${date}.txt"
 
+cat input/day$date.txt | head -n 20
+
+
+if [[ -f "day$((date - 1)).rs" ]]; then
+    cp "day$((date - 1)).rs" day${date}.rs
+    sed -i "s/day.*rs/day$date.rs/" ../Cargo.toml
+fi
