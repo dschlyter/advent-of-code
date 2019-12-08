@@ -1,73 +1,122 @@
-pub fn run_program(reg: &mut Vec<i32>, input: &Vec<i32>) -> Vec<i32> {
-    let mut ip = 0;
-    let mut input_pointer = 0;
-    let mut output: Vec<i32> = [].to_vec();
+pub struct Computer {
+    reg: Vec<i32>,
+    input: Vec<i32>,
+    output: Vec<i32>,
+    ip: usize,
+    input_pointer: usize,
+    output_pointer: usize,
+    terminated: bool
+}
 
-    loop {
-        let op_reg = reg[ip];
-        let op = op_reg % 100;
+#[derive(PartialEq)]
+enum RunMode {
+    Finish,
+    NextOutput
+}
 
-        // dbg!("Executing", op);
-
-        if op == 1 {
-            let p = params(reg, ip, 2);
-            let res_pos = reg[(ip+3) as usize] as usize;
-            reg[res_pos] = p[0] + p[1];
-            ip += 4;
-        } else if op == 2 {
-            let p = params(reg, ip, 2);
-            let res_pos = reg[(ip+3) as usize] as usize;
-            reg[res_pos] = p[0] * p[1];
-            ip += 4;
-        } else if op == 3 {
-            let res_pos = reg[(ip+1) as usize] as usize;
-            reg[res_pos] = input[input_pointer];
-            input_pointer += 1;
-            ip += 2;
-        } else if op == 4 {
-            let p = params(reg, ip, 1);
-            output.push(p[0]);
-            ip += 2;
-        } else if op == 5 {
-            let p = params(reg, ip, 2);
-            if p[0] != 0 {
-                ip = p[1] as usize;
-            } else {
-                ip += 3;
-            }
-        } else if op == 6 {
-            let p = params(reg, ip, 2);
-            if p[0] == 0 {
-                ip = p[1] as usize;
-            } else {
-                ip += 3;
-            }
-        } else if op == 7 {
-            let p = params(reg, ip, 2);
-            let res_pos = reg[(ip+3) as usize] as usize;
-            if p[0] < p[1] {
-                reg[res_pos] = 1;
-            } else {
-                reg[res_pos] = 0;
-            }
-            ip += 4;
-        } else if op == 8 {
-            let p = params(reg, ip, 2);
-            let res_pos = reg[(ip+3) as usize] as usize;
-            if p[0] == p[1] {
-                reg[res_pos] = 1;
-            } else {
-                reg[res_pos] = 0;
-            }
-            ip += 4;
-        } else if op == 99 {
-            break;
-        } else {
-            panic!(format!("Unsupported opcode! {}", op));
+impl Computer {
+    pub fn new(reg: &Vec<i32>) -> Computer {
+        return Computer {
+            reg: reg.clone(),
+            input: [].to_vec(),
+            output: [].to_vec(),
+            ip: 0,
+            input_pointer: 0,
+            output_pointer: 0,
+            terminated: false
         }
     }
 
-    return output;
+    pub fn write(&mut self, data: i32) {
+        self.input.push(data);
+    }
+
+    pub fn read(&mut self) -> i32 {
+        let ret = self.output[self.output_pointer];
+        self.output_pointer += 1;
+        return ret;
+    }
+
+    pub fn run(&mut self) {
+        self.run_program(RunMode::Finish);
+    }
+
+    // Send one input and run until next output (or termination)
+    pub fn talk(&mut self, input: i32) -> i32 {
+        self.write(input);
+        self.run_program(RunMode::NextOutput);
+        return self.read();
+    }
+
+    fn run_program(&mut self, run_mode: RunMode) {
+        loop {
+            let op_reg = self.reg[self.ip];
+            let op = op_reg % 100;
+
+            // dbg!("Executing", op);
+
+            if op == 1 {
+                let p = params(&self.reg, self.ip, 2);
+                let res_pos = self.reg[(self.ip+3) as usize] as usize;
+                self.reg[res_pos] = p[0] + p[1];
+                self.ip += 4;
+            } else if op == 2 {
+                let p = params(&self.reg, self.ip, 2);
+                let res_pos = self.reg[(self.ip+3) as usize] as usize;
+                self.reg[res_pos] = p[0] * p[1];
+                self.ip += 4;
+            } else if op == 3 {
+                let res_pos = self.reg[(self.ip+1) as usize] as usize;
+                self.reg[res_pos] = self.input[self.input_pointer];
+                self.input_pointer += 1;
+                self.ip += 2;
+            } else if op == 4 {
+                let p = params(&self.reg, self.ip, 1);
+                self.output.push(p[0]);
+                self.ip += 2;
+                if run_mode == RunMode::NextOutput {
+                    return;
+                }
+            } else if op == 5 {
+                let p = params(&self.reg, self.ip, 2);
+                if p[0] != 0 {
+                    self.ip = p[1] as usize;
+                } else {
+                    self.ip += 3;
+                }
+            } else if op == 6 {
+                let p = params(&self.reg, self.ip, 2);
+                if p[0] == 0 {
+                    self.ip = p[1] as usize;
+                } else {
+                    self.ip += 3;
+                }
+            } else if op == 7 {
+                let p = params(&self.reg, self.ip, 2);
+                let res_pos = self.reg[(self.ip+3) as usize] as usize;
+                if p[0] < p[1] {
+                    self.reg[res_pos] = 1;
+                } else {
+                    self.reg[res_pos] = 0;
+                }
+                self.ip += 4;
+            } else if op == 8 {
+                let p = params(&self.reg, self.ip, 2);
+                let res_pos = self.reg[(self.ip+3) as usize] as usize;
+                if p[0] == p[1] {
+                    self.reg[res_pos] = 1;
+                } else {
+                    self.reg[res_pos] = 0;
+                }
+                self.ip += 4;
+            } else if op == 99 {
+                self.terminated = true;
+                return;
+            } else {
+                panic!(format!("Unsupported opcode! {}", op));
+            }
+        }
+    }
 }
 
 fn params(reg: &Vec<i32>, ip: usize, param_count: usize) -> Vec<i32> {

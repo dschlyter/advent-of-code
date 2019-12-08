@@ -46,5 +46,10 @@ fn part2(lines: &Vec<String>) {
 }
 
 fn test_program(program: &Vec<i32>, input: &Vec<i32>) -> i32 {
-    return computer::run_program(&mut program.to_vec(), &input)[0];
+    let mut c = computer::Computer::new(program);
+    for inp in input {
+        c.write(*inp);
+    }
+    c.run();
+    return c.read();
 }

@@ -6,7 +6,7 @@ IFS=$'\n\t'
 
 day=$1
 
-while inotifywait -e close_write day$day.rs; do
+while inotifywait -e close_write *.rs; do
     clear
     timeout 60 run.sh "$@" || true
 done
