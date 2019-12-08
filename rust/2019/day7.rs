@@ -15,15 +15,6 @@ fn part1(lines: &Vec<String>) {
     let program: Vec<i32> = lines[0].split(",").map(|n| n.parse::<i32>().unwrap()).collect();
     let mut best = 0;
 
-    let mut signal = 0;
-    let (a, b, c, d, e) = (4, 3, 2, 1, 0);
-    signal = test_program(&program, &([a, signal].to_vec()));
-    signal = test_program(&program, &([b, signal].to_vec()));
-    signal = test_program(&program, &([c, signal].to_vec()));
-    signal = test_program(&program, &([d, signal].to_vec()));
-    signal = test_program(&program, &([e, signal].to_vec()));
-    dbg!(signal);
-
     for a in 0..5 {
         let out1 = test_program(&program, &([a, 0].to_vec()));
         for b in 0..5 {
