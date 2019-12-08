@@ -7,7 +7,8 @@ mod computer;
 fn main() {
     let lines = util::get_lines();
 
-    part1(&lines);
+    // New test output breaks part1
+    // part1(&lines);
     part2(&lines);
 }
 
@@ -40,9 +41,30 @@ fn part1(lines: &Vec<String>) {
 }
 
 fn part2(lines: &Vec<String>) {
-    let mut ans = 0;
+    let program: Vec<i32> = lines[0].split(",").map(|n| n.parse::<i32>().unwrap()).collect();
+    let mut best = 0;
 
-    println!("Part 2 answer {}", ans);
+    let start = 5;
+    let stop = 10;
+
+    for a in start..stop {
+        for b in start..stop {
+            if a == b {continue;}
+            for c in start..stop {
+                if c == b || c == a {continue;}
+                for d in start..stop {
+                    if d == c || d == b || d == a {continue;}
+                    for e in start..stop {
+                        if e == d || e == c || e == b || e == a {continue;}
+                        let out5 = test_program2(&program, &([a, b, c, d, e].to_vec()));
+                        best = i32::max(best, out5);
+                    }
+                }
+            }
+        }
+    }
+
+    println!("Part 2 answer {}", best);
 }
 
 fn test_program(program: &Vec<i32>, input: &Vec<i32>) -> i32 {
@@ -52,4 +74,26 @@ fn test_program(program: &Vec<i32>, input: &Vec<i32>) -> i32 {
     }
     c.run();
     return c.read();
+}
+
+fn test_program2(program: &Vec<i32>, params: &Vec<i32>) -> i32 {
+    let mut c: Vec<computer::Computer> = Vec::new();
+    for i in 0..5 {
+        c.push(computer::Computer::new(program));
+        c[i].write(params[i]);
+    }
+
+    let mut signal = 0;
+    let mut output = 0;
+    while !(&c[4].done()) {
+        for i in 0..5 {
+            c[i].process(signal);
+            if !c[i].done() {
+                signal = c[i].read();
+            }
+        }
+        output = signal;
+    }
+
+    return output;
 }

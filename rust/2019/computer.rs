@@ -37,15 +37,18 @@ impl Computer {
         return ret;
     }
 
+    pub fn done(&self) -> bool {
+        return self.terminated;
+    }
+
     pub fn run(&mut self) {
         self.run_program(RunMode::Finish);
     }
 
     // Send one input and run until next output (or termination)
-    pub fn talk(&mut self, input: i32) -> i32 {
+    pub fn process(&mut self, input: i32) {
         self.write(input);
         self.run_program(RunMode::NextOutput);
-        return self.read();
     }
 
     fn run_program(&mut self, run_mode: RunMode) {
