@@ -10,4 +10,4 @@ edition = "2018"
 
 [[bin]]
 name = "test"
-path = "2019/day6.rs"
+path = "2019/day9.rs"

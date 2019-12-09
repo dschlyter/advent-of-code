@@ -10,7 +10,7 @@ program=$(echo "day"$1*)
 input=${2:-}
 
 if [[ "$program" == *.rs ]]; then
-    rustc $program -o program
+    rustc $program -o program -g
     ex="timeout 10 $(pwd)/program"
 else
     echo "Unsupported program $program"
