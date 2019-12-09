@@ -135,15 +135,16 @@ impl Computer {
     fn params(&mut self, param_count: usize) -> Vec<i64> {
         let ip = self.ip;
         let params = (0..param_count)
-            .map(|position| self.fetch(position as u32, self.reg[ip+1+position]))
+            .map(|position| self.fetch(position as u32))
             .collect();
         // dbg!(&params);
         params
     }
 
-    fn fetch(&mut self, pos: u32, param: i64) -> i64 {
+    fn fetch(&mut self, pos: u32) -> i64 {
         let op = self.reg[self.ip];
         let parmode = self.digit(op, pos + 2);
+        let param = self.reg[self.ip + 1 + (pos as usize)];
 
         if parmode == 0 {
             return self.reg[param as usize];

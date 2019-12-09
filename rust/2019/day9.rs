@@ -1,5 +1,6 @@
 // use std::collections::HashMap;
 // use std::collections::HashSet;
+use std::time::Instant;
 
 mod util;
 mod computer;
@@ -12,7 +13,6 @@ fn main() {
 }
 
 fn part1(lines: &Vec<String>) {
-    let mut ans = 0;
     let program: Vec<i64> = lines[0].split(",").map(|n| n.parse::<i64>().unwrap()).collect();
 
     let mut c = computer::Computer::new(&program);
@@ -24,7 +24,14 @@ fn part1(lines: &Vec<String>) {
 }
 
 fn part2(lines: &Vec<String>) {
-    let mut ans = 0;
+    let now = Instant::now();
+    let program: Vec<i64> = lines[0].split(",").map(|n| n.parse::<i64>().unwrap()).collect();
 
-    println!("Part 2 answer {}", ans);
+    let mut c = computer::Computer::new(&program);
+
+    c.write(2);
+    c.run();
+
+    dbg!(now.elapsed());
+    println!("Part 2 answer {}", c.read());
 }
