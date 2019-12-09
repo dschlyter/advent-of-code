@@ -65,63 +65,69 @@ impl Computer {
             // println!("Executing {} {} {} {}", op_reg, self.reg[self.ip+1], self.reg[self.ip+2], self.reg[self.ip+3]);
 
             if op == 1 {
-                let p = self.params(2);
+                let a = self.fetch(0);
+                let b = self.fetch(1);
                 let res_pos = self.fetch_ret_pos(2);
-                self.reg[res_pos] = p[0] + p[1];
+                self.reg[res_pos] = a + b;
                 self.ip += 4;
             } else if op == 2 {
-                let p = self.params(2);
+                let a = self.fetch(0);
+                let b = self.fetch(1);
                 let res_pos = self.fetch_ret_pos(2);
-                self.reg[res_pos] = p[0] * p[1];
+                self.reg[res_pos] = a * b;
                 self.ip += 4;
             } else if op == 3 {
-                let res_pos = self.fetch_ret_pos(0);
-                self.reg[res_pos] = self.input[self.input_pointer];
+                let ret_pos = self.fetch_ret_pos(0);
+                self.reg[ret_pos] = self.input[self.input_pointer];
                 self.input_pointer += 1;
                 self.ip += 2;
             } else if op == 4 {
-                let p = self.params(1);
-                self.output.push(p[0]);
-                dbg!(format!("Output {}", p[0]));
+                let a = self.fetch(0);
+                self.output.push(a);
+                dbg!(format!("Output {}", a));
                 self.ip += 2;
                 if run_mode == RunMode::NextOutput {
                     return;
                 }
             } else if op == 5 {
-                let p = self.params(2);
-                if p[0] != 0 {
-                    self.ip = p[1] as usize;
+                let a = self.fetch(0);
+                let b = self.fetch(1);
+                if a != 0 {
+                    self.ip = b as usize;
                 } else {
                     self.ip += 3;
                 }
             } else if op == 6 {
-                let p = self.params(2);
-                if p[0] == 0 {
-                    self.ip = p[1] as usize;
+                let a = self.fetch(0);
+                let b = self.fetch(1);
+                if a == 0 {
+                    self.ip = b as usize;
                 } else {
                     self.ip += 3;
                 }
             } else if op == 7 {
-                let p = self.params(2);
+                let a = self.fetch(0);
+                let b = self.fetch(1);
                 let res_pos = self.fetch_ret_pos(2);
-                if p[0] < p[1] {
+                if a < b {
                     self.reg[res_pos] = 1;
                 } else {
                     self.reg[res_pos] = 0;
                 }
                 self.ip += 4;
             } else if op == 8 {
-                let p = self.params(2);
+                let a = self.fetch(0);
+                let b = self.fetch(1);
                 let res_pos = self.fetch_ret_pos(2);
-                if p[0] == p[1] {
+                if a == b {
                     self.reg[res_pos] = 1;
                 } else {
                     self.reg[res_pos] = 0;
                 }
                 self.ip += 4;
             } else if op == 9 {
-                let p = self.params(1);
-                self.relative_base = (self.relative_base as i64 + p[0]) as usize;
+                let a = self.fetch(0);
+                self.relative_base = (self.relative_base as i64 + a) as usize;
                 self.ip += 2;
             } else if op == 99 {
                 self.terminated = true;
@@ -130,15 +136,6 @@ impl Computer {
                 panic!(format!("Unsupported opcode! {}", op));
             }
         }
-    }
-
-    fn params(&mut self, param_count: usize) -> Vec<i64> {
-        let ip = self.ip;
-        let params = (0..param_count)
-            .map(|position| self.fetch(position as u32))
-            .collect();
-        // dbg!(&params);
-        params
     }
 
     fn fetch(&mut self, pos: u32) -> i64 {
@@ -182,8 +179,17 @@ impl Computer {
     }
 
     fn digit(&self, number: i64, pos: u32) -> i64 {
-        let base: i64 = 10;
-        return ((number as i64) % base.pow(pos+1)) / (base.pow(pos) as i64);
+        // hardcoded solutions to give around 2x speed increase
+        if pos == 2 {
+            return (number / 100) % 10
+        }
+        else if pos == 3 {
+            return (number / 1000) % 10
+        }
+        else if pos == 4 {
+            return (number / 10000) % 10
+        }
+        panic!("Unsupported parameter mode position");
     }
 
     fn grow_memory(&mut self, size: usize) {
