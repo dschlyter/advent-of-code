@@ -118,7 +118,7 @@ def main():
 
         # forward jump block can be replaced with if
         if inst.location == start:
-            inst.alt_name = {"jump": "if", "zjump": "ifz"}[inst.name]
+            inst.alt_name = {"jump": "ifz", "zjump": "if"}[inst.name]
             inst.args = inst.args[0:1]
 
         # backward jump block can be replaced with while (as in do-while)
@@ -126,6 +126,21 @@ def main():
             # a clean forward jump can be replaced with an if statement
             inst.alt_name = {"jump": "while", "zjump": "whilez"}[inst.name]
             inst.args = inst.args[0:1]
+
+    # Sugar: add a "do" pseudo-instruction for do-while constructs
+    do_positions = []
+    for i in range(len(instructions) - 1):
+        if instructions[i].indent < instructions[i+1].indent and not instructions[i].alt_name:
+            do_positions.append(i+1)
+
+    do_count = 0
+    print(do_positions)
+    for do_pos in do_positions:
+        pos = do_count + do_pos
+        orig_inst = instructions[pos-1]
+        instructions.insert(pos, Inst(orig_inst.location, "do", None, [], orig_inst.indent))
+        # offset every time we add an instruction
+        do_count += 1
 
     # List used labels (note: will miss dynamic targets)
     # We also skip ifs and whiles that have valid blocks
