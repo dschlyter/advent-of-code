@@ -47,6 +47,10 @@ impl Computer {
         self.run_program(RunMode::Finish);
     }
 
+    pub fn run_next(&mut self) {
+        self.run_program(RunMode::NextOutput);
+    }
+
     // Send one input and run until next output (or termination)
     pub fn process(&mut self, input: i64) {
         self.write(input);
@@ -84,7 +88,7 @@ impl Computer {
             } else if op == 4 {
                 let a = self.fetch(0);
                 self.output.push(a);
-                dbg!(format!("Output {}", a));
+                // dbg!(format!("Output {}", a));
                 self.ip += 2;
                 if run_mode == RunMode::NextOutput {
                     return;
