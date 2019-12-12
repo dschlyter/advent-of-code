@@ -10,8 +10,8 @@ program=$(echo "day"$1*)
 input=${2:-}
 
 if [[ "$program" == *.rs ]]; then
-    rustc $program -o program -g
-    ex="timeout 10 $(pwd)/program"
+    export RUST_BACKTRACE=1
+    ex="timeout 10 cargo run"
 else
     echo "Unsupported program $program"
     exit 1
@@ -30,5 +30,3 @@ elif [[ $input == "" ]]; then
 else
     cat $input | $ex
 fi
-
-test -f program && rm program
