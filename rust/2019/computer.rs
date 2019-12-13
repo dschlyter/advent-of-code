@@ -1,10 +1,10 @@
 pub struct Computer {
     reg: Vec<i64>,
     input: Vec<i64>,
-    output: Vec<i64>,
+    pub output: Vec<i64>,
     ip: usize,
     input_pointer: usize,
-    output_pointer: usize,
+    pub output_pointer: usize,
     relative_base: usize,
     terminated: bool
 }
@@ -12,7 +12,8 @@ pub struct Computer {
 #[derive(PartialEq)]
 pub enum RunMode {
     Finish,
-    NextOutput
+    NextOutput,
+    NextInput
 }
 
 impl Computer {
@@ -33,6 +34,10 @@ impl Computer {
         self.input.push(data);
     }
 
+    pub fn can_read(&self) -> bool {
+        return self.output_pointer < self.output.len();
+    }
+
     pub fn read(&mut self) -> i64 {
         let ret = self.output[self.output_pointer];
         self.output_pointer += 1;
@@ -49,6 +54,10 @@ impl Computer {
 
     pub fn run_next(&mut self) {
         self.run_program(RunMode::NextOutput);
+    }
+
+    pub fn run_to_input(&mut self) {
+        self.run_program(RunMode::NextInput);
     }
 
     // Send one input and run until next output (or termination)
@@ -81,6 +90,9 @@ impl Computer {
                 self.reg[res_pos] = a * b;
                 self.ip += 4;
             } else if op == 3 {
+                if run_mode == RunMode::NextInput && self.input_pointer >= self.input.len() {
+                    return;
+                }
                 let ret_pos = self.fetch_ret_pos(0);
                 self.reg[ret_pos] = self.input[self.input_pointer];
                 self.input_pointer += 1;
