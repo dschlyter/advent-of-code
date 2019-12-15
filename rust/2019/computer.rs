@@ -52,7 +52,7 @@ impl Computer {
         self.run_program(RunMode::Finish);
     }
 
-    pub fn run_next(&mut self) {
+    pub fn run_to_output(&mut self) {
         self.run_program(RunMode::NextOutput);
     }
 
@@ -146,6 +146,7 @@ impl Computer {
                 self.relative_base = (self.relative_base as i64 + a) as usize;
                 self.ip += 2;
             } else if op == 99 {
+                dbg!("Program halting");
                 self.terminated = true;
                 return;
             } else {
