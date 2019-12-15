@@ -18,29 +18,51 @@ class IntCode:
         self.extended_memory = defaultdict(int)
         self.position = 0
         self.base_offset = 0
-        self.operations = self.init_operations()
         self.input_instructions = deque()
         self.output_values = deque()
 
-    def init_operations(self):
-        operations = {1: self.addition, 2: self.multiplication, 3: self.input, 4: self.output, 5: self.jump_if_true,
-                      6: self.jump_if_false, 7: self.less_than, 8: self.equals, 9: self.adjust_base}
-        return operations
-
     def run(self, suspend_on_output=False):
-        while (instruction := self.program[self.position]) != 99:
+        while True:
+            instruction = self.program[self.position]
+            if instruction == 99:
+                break
             opcode = instruction % 10
-            func_call = self.operations[opcode]
-            func_call(instruction)
+
+            # func_call = self.operations[opcode]
+            # func_call(instruction)
+
+            if opcode == 1:
+                self.addition(instruction)
+            if opcode == 2:
+                self.multiplication(instruction)
+            if opcode == 3:
+                self.input(instruction)
+            if opcode == 4:
+                self.output(instruction)
+            if opcode == 5:
+                self.jump_if_true(instruction)
+            if opcode == 6:
+                self.jump_if_false(instruction)
+            if opcode == 7:
+                self.less_than(instruction)
+            if opcode == 8:
+                self.equals(instruction)
+            if opcode == 9:
+                self.adjust_base(instruction)
+
             if opcode == 4 and suspend_on_output:
                 return
         return
 
     def addition(self, instruction):
-        self.store_func_of_two_values(instruction, lambda x, y: x + y)
+        value_p1, value_p2, store_pos = self.get_two_values_and_store_pos(instruction)
+        self.store(store_pos, value_p1 + value_p2)
+        self.position += 4
 
     def multiplication(self, instruction):
-        self.store_func_of_two_values(instruction, lambda x, y: x * y)
+        value_p1, value_p2, store_pos = self.get_two_values_and_store_pos(instruction)
+        self.store(store_pos, value_p1 * value_p2)
+        self.position += 4
 
     def store_func_of_two_values(self, instruction, function):
         value_p1, value_p2, store_pos = self.get_two_values_and_store_pos(instruction)
