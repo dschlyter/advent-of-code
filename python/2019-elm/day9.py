@@ -26,5 +26,17 @@ if __name__ == '__main__':
 # pypy3 - 0.106
 
 # after removing the lambda in addition and multiplication
-# python3.8.0 - 0.447 s (slower? hmm)
+# python3.8.0 - 0.447 s
 # pypy3 - 0.097
+
+# after removing extra memory and just expanding the array
+# python3.8.0 - 0.446 s
+# pypy3 - 0.096
+
+# static memory allocation
+# python3.8.0 - 0.430 s
+# pypy3 - 0.097
+
+# dynamic memory allocation
+# python3.8.0 - 0.467
+# pypy3 - 0.098

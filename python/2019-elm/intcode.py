@@ -13,15 +13,15 @@ class IntCode:
 
     def __init__(self, program):
         self.program = program.copy()
-        self.program_memory_size = len(self.program)
         # noinspection PyArgumentList
-        self.extended_memory = defaultdict(int)
         self.position = 0
         self.base_offset = 0
         self.input_instructions = deque()
         self.output_values = deque()
 
     def run(self, suspend_on_output=False):
+        # self.program = self.program + ([0] * 1000)
+
         while True:
             instruction = self.program[self.position]
             if instruction == 99:
@@ -112,20 +112,22 @@ class IntCode:
     def get_value(self, mode, position_offset):
         value_at_pos = self.program[self.position + position_offset]
         if mode == 0:
-            return self.program[value_at_pos] if value_at_pos < self.program_memory_size else \
-                self.extended_memory[value_at_pos]
+            self.grow_memory(value_at_pos)
+            return self.program[value_at_pos]
         elif mode == 1:
             return value_at_pos
         elif mode == 2:
             value_base_offset_adj = self.base_offset + value_at_pos
-            return self.program[value_base_offset_adj] if value_base_offset_adj < self.program_memory_size else \
-                self.extended_memory[value_base_offset_adj]
+            self.grow_memory(value_base_offset_adj)
+            return self.program[value_base_offset_adj]
 
     def store(self, store_pos, value):
-        if store_pos < self.program_memory_size:
-            self.program[store_pos] = value
-        else:
-            self.extended_memory[store_pos] = value
+        self.grow_memory(store_pos)
+        self.program[store_pos] = value
+
+    def grow_memory(self, memory_size):
+        if len(self.program) <= memory_size:
+            self.program = self.program + ([0] * memory_size)
 
     def get_store_pos(self, mode, position_offset):
         if mode == 0:
