@@ -1,4 +1,4 @@
-from _collections import deque, defaultdict
+from _collections import deque
 
 
 class ProgramTerminatedError(Exception):
@@ -32,72 +32,61 @@ class IntCode:
             # func_call(instruction)
 
             if opcode == 1:
-                self.addition(instruction)
+                mode_p_ = int(instruction / 100) % 10
+                mode_p2 = int(instruction / 1000) % 10
+                mode_p3 = int(instruction / 10000) % 10
+                p_8 = self.get_value(mode_p_, 1)
+                p_7 = self.get_value(mode_p2, 2)
+                pos2 = self.get_store_pos(mode_p3, 3)
+                result = p_8, p_7, pos2
+                value_p1, value_p2, store_pos = result
+                self.store(store_pos, value_p1 + value_p2)
+                self.position += 4
             if opcode == 2:
-                self.multiplication(instruction)
+                p_10 = int(instruction / 100) % 10
+                p_13 = int(instruction / 1000) % 10
+                p_12 = int(instruction / 10000) % 10
+                p_11 = self.get_value(p_10, 1)
+                p_9 = self.get_value(p_13, 2)
+                pos3 = self.get_store_pos(p_12, 3)
+                result1 = p_11, p_9, pos3
+                value_p_, p_, pos = result1
+                self.store(pos, value_p_ * p_)
+                self.position += 4
             if opcode == 3:
-                self.input(instruction)
+                mode_p1 = parse_instruction(instruction, 1)
+                pos1 = self.get_store_pos(mode_p1, 1)
+                try:
+                    self.store(pos1, self.input_instructions.popleft())
+                    self.position += 2
+                except IndexError:
+                    raise NoInputProvidedError
             if opcode == 4:
-                self.output(instruction)
+                p_1 = self.get_one_value(instruction)
+                self.output_values.append(p_1)
+                self.position += 2
             if opcode == 5:
-                self.jump_if_true(instruction)
+                p_3, p_2 = self.get_two_values(instruction)
+                self.position = p_2 if p_3 else self.position + 3
             if opcode == 6:
-                self.jump_if_false(instruction)
+                p_6, p_5 = self.get_two_values(instruction)
+                self.position = p_5 if not p_6 else self.position + 3
             if opcode == 7:
-                self.less_than(instruction)
+                p_15, p_14, pos4 = self.get_two_values_and_store_pos(instruction)
+                self.store(pos4, 1 if p_15 < p_14 else 0)
+                self.position += 4
             if opcode == 8:
-                self.equals(instruction)
+                p_17, p_16, pos5 = self.get_two_values_and_store_pos(instruction)
+                self.store(pos5, 1 if p_17 == p_16 else 0)
+                self.position += 4
             if opcode == 9:
-                self.adjust_base(instruction)
+                p_4 = self.get_one_value(instruction)
+                self.base_offset += p_4
+                self.position += 2
 
             if opcode == 4 and suspend_on_output:
                 return
         return
-
-    def addition(self, instruction):
-        value_p1, value_p2, store_pos = self.get_two_values_and_store_pos(instruction)
-        self.store(store_pos, value_p1 + value_p2)
-        self.position += 4
-
-    def multiplication(self, instruction):
-        value_p1, value_p2, store_pos = self.get_two_values_and_store_pos(instruction)
-        self.store(store_pos, value_p1 * value_p2)
-        self.position += 4
-
-    def store_func_of_two_values(self, instruction, function):
-        value_p1, value_p2, store_pos = self.get_two_values_and_store_pos(instruction)
-        self.store(store_pos, function(value_p1, value_p2))
-        self.position += 4
-
-    def input(self, instruction):
-        mode_p1 = parse_instruction(instruction, 1)
-        store_pos = self.get_store_pos(mode_p1, 1)
-        try:
-            self.store(store_pos, self.input_instructions.popleft())
-            self.position += 2
-        except IndexError:
-            raise NoInputProvidedError
-
-    def output(self, instruction):
-        value_p1 = self.get_one_value(instruction)
-        self.output_values.append(value_p1)
-        self.position += 2
-
-    def jump_if_true(self, instruction):
-        self.jump(instruction, lambda x: x)
-
-    def jump_if_false(self, instruction):
-        self.jump(instruction, lambda x: not x)
-
-    def jump(self, instruction, function):
-        value_p1, value_p2 = self.get_two_values(instruction)
-        self.position = value_p2 if function(value_p1) else self.position + 3
-
-    def less_than(self, instruction):
-        self.store_one_or_zero(instruction, lambda x, y: x < y)
-
-    def equals(self, instruction):
-        self.store_one_or_zero(instruction, lambda x, y: x == y)
 
     def store_one_or_zero(self, instruction, function):
         value_p1, value_p2, store_pos = self.get_two_values_and_store_pos(instruction)

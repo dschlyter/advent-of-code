@@ -40,3 +40,7 @@ if __name__ == '__main__':
 # dynamic memory allocation
 # python3.8.0 - 0.467
 # pypy3 - 0.098
+
+# inline all the things
+# python3.8.0 - 0.404
+# pypy3 - 0.96
