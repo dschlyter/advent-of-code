@@ -31,7 +31,7 @@ fn part1(lines: &Vec<String>) {
     let mut line = Vec::new();
 
     let mut line_no = 0;
-    let mut show = String::from(line_no.to_string());
+    let mut show = String::new();
 
     while c.can_read() {
         let ch = c.read();
@@ -44,14 +44,12 @@ fn part1(lines: &Vec<String>) {
 
             println!("{}", show);
             line_no += 1;
-            show = String::from(line_no.to_string());
+            show = String::new();
 
             continue;
         } else {
             show.push((ch as u8) as char);
         }
-
-        
     }
 
     let mut score = 0;
@@ -64,13 +62,11 @@ fn part1(lines: &Vec<String>) {
             lines[y][x-1] != 46 &&
             lines[y][x+1] != 46
             {
-                dbg!((y, x));
                 score += y * x;
             }
         }
     }
 
-    // 1462 too low
-    // 33342 too high
+    // 39 segments in total - max 10 operations per func
     println!("Part 1 answer {}", score);
 }
