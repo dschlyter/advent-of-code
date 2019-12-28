@@ -1,7 +1,13 @@
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, stdin};
 
 pub fn get_lines() -> Vec<String> {
     io::stdin().lock().lines().map(|l| l.expect("failed to parse line")).collect()
+}
+
+pub fn input() -> String {
+    let mut ret = String::new();
+    stdin().read_line(&mut ret).expect("Failed to read from stdin");
+    ret
 }
 
 pub fn debug_map(y: i32, x: i32, c: char) -> Vec<Vec<char>> {

@@ -12,4 +12,4 @@ regex = "1"
 
 [[bin]]
 name = "test"
-path = "2019/day12.rs"
+path = "2019/day25.rs"

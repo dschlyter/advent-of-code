@@ -11,7 +11,7 @@ input=${2:-}
 
 if [[ "$program" == *.rs ]]; then
     export RUST_BACKTRACE=1
-    ex="timeout 10 cargo run"
+    ex="cargo run"
 else
     echo "Unsupported program $program"
     exit 1
