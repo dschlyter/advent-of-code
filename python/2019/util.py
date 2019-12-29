@@ -1,11 +1,12 @@
+import os
 import re
 import sys
 import time
 from pathlib import Path
 
 
-def main(filename, part1, part2):
-    parts, inputs = parse_args(filename)
+def main(filename, part1, part2, match=None):
+    parts, inputs = parse_args(filename, match=match)
 
     for input_file in inputs:
         print("Running", input_file)
@@ -17,7 +18,7 @@ def main(filename, part1, part2):
             part2(lines)
 
 
-def parse_args(filename):
+def parse_args(filename, match=None):
     args = sys.argv[1:]
 
     parts = {1, 2}
@@ -33,7 +34,8 @@ def parse_args(filename):
     else:
         day = filename.split("/")[-1].replace(".py", "")
         inputs = sorted([file for file in map(str, Path('input').glob(f'*.txt'))
-                         if f'{day}.txt' in file or f'{day}_' in file])
+                         if (f'{day}.txt' in file or f'{day}_' in file)
+                         and (match is None or match in file)])
 
     return parts, inputs
 
