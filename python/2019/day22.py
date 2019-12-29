@@ -61,11 +61,11 @@ def part1(lines: List[str]):
 def part2(lines: List[str]):
     ans = None
 
-    # cards = 119315717514047
-    # times = 101741582076661
-    # pos = 2020
-    cards = 10007
-    pos = 5472
+    cards = 119315717514047
+    times = 101741582076661
+    pos = 2020
+    # cards = 10007
+    # pos = 5472
 
     lines = list(reversed(lines))
     ops = []
@@ -92,8 +92,9 @@ def part2(lines: List[str]):
     while pos not in visited:
         count += 1
         visited.add(pos)
-        # if count % 100000 == 0:
-        print(count, pos, pos-last_pos)
+
+        if count % 100000 == 0:
+            print(count, pos, pos-last_pos)
         last_pos = pos
 
         for op in ops:

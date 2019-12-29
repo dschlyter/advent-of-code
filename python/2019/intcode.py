@@ -22,6 +22,16 @@ class IntCode:
         self.input_instructions = deque()
         self.output_values = deque()
         self.halted = False
+        self.count = 0
+
+    def input_ascii(self, command):
+        inputs = list(map(ord, command)) + [10]
+        for inp in inputs:
+            self.input_instructions.append(inp)
+
+    def print_ascii(self):
+        while self.output_values and self.output_values[0] < 255:
+            print(chr(self.output_values.popleft()), end='')
 
     def run(self, suspend_on_output=False, suspend_on_input=False):
         # self.program = self.program + ([0] * 1000)
@@ -32,6 +42,7 @@ class IntCode:
                 self.halted = True
                 break
             opcode = instruction % 10
+            self.count += 1
 
             # func_call = self.operations[opcode]
             # func_call(instruction)
