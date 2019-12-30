@@ -62,55 +62,65 @@ def part2(lines: List[str]):
     ans = None
 
     cards = 119315717514047
-    times = 101741582076661
     pos = 2020
-    # cards = 10007
-    # pos = 5472
+    times = 101741582076661
+
+    # cards = 10007; pos = 5472; times = 1
 
     lines = list(reversed(lines))
-    ops = []
+
+    k = 1
+    m = 0
 
     for line in lines:
         if line == "deal into new stack":
-            ops.append(0)
+            k *= -1
+            m *= -1
+            m = (m - 1) % cards
         elif line.startswith("cut "):
             N = int(line.split(" ")[1])
             if N < 0:
                 N = cards + N
             assert(N > 0)
-            ops.append(-N)
+
+            m = (m + N) % cards
         elif line.startswith("deal with increment "):
             N = int(line.split(" ")[-1])
             inv = modinv(N, cards)
             assert(inv > 0)
-            ops.append(inv)
 
-    visited = set()
-    count = 0
-    last_pos = 0
+            k = (k * inv) % cards
+            m = (m * inv) % cards
 
-    while pos not in visited:
-        count += 1
-        visited.add(pos)
+    powers = [(k, m)]
+    for i in range(1, 50):
+        k0, m0 = powers[i-1]
+        k = (k0 * k0) % cards
+        m = (k0 * m0 + m0) % cards
+        powers.append((k, m))
 
-        if count % 100000 == 0:
-            print(count, pos, pos-last_pos)
-        last_pos = pos
+    for i in range(0, 50):
+        powpow = 2 ** i
+        if times & powpow > 0:
+            k, m = powers[i]
+            pos = (k * pos + m) % cards
 
-        for op in ops:
-            if op == 0:
-                pos = cards - 1 - pos
-            elif op < 0:
-                N = -op
-                if pos > cards - N:
-                    pos -= (cards - N)
-                else:
-                    pos += N
-            elif op > 0:
-                N = op
-                pos = (pos * N) % cards
+    # 19219759037745 is too low :(
+    # 46458976142918 is too low :(
+    # 101842973938400 is too high :(
 
-    print(count)
+    """
+    8150301316572
+    74518628734685
+    41566245312604
+    51529718527781
+    84809471150302
+    34955862758706
+    54907196857247
+    77653475936411
+    108150807952582
+    24095646560451
+    """
 
     print("part 2 answer", pos)
 

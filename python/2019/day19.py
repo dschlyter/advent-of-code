@@ -10,7 +10,9 @@ from intcode import IntCode
 
 sys.setrecursionlimit(15000)
 
+import pysnooper
 
+@pysnooper.snoop()
 def part1(lines: List[str]):
     program = list(map(int, lines[0].split(",")))
 
@@ -94,4 +96,4 @@ def part2(lines: List[str]):
 
 
 if __name__ == '__main__':
-    util.main(__file__, part1, part2)
+    util.main(__file__, part1, lambda x: 0)
