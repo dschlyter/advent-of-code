@@ -11,7 +11,7 @@ curr_date="$(date '+%-d')"
 curr_year="$(date '+%-Y')"
 date="${1:-$curr_date}"
 cookie="$(cat $HOME/.secrets/advent-cookie)"
-file_ending=".scala"
+file_ending="scala"
 
 curl "https://adventofcode.com/$curr_year/day/$date/input" \
     -H 'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8' \
@@ -27,7 +27,12 @@ cat input/day$date.txt | head -n 20
 
 
 ydate=$((date - 1))
-if [[ -f "Day$ydate.".${file_ending} ]]; then
-    cp "Day$ydate.$file_ending" Day${date}.${file_ending}
+old_file="Day$ydate.${file_ending}"
+new_file="Day$date.${file_ending}"
+if [[ -f "$old_file" ]]; then
+    cp "$old_file" "$new_file"
+    sed -i -e "s/day$ydate/day$date/" "$new_file"
+    sed -i -e "s/Day$ydate/Day$date/" "$new_file"
+    rm "$new_file"-e
     # sed -i "s/day.*rs/day$date.rs/" ../Cargo.toml
 fi
