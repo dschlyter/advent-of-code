@@ -46,7 +46,5 @@ object Day4 {
       }
     }).count(identity)
     println(part2)
-
-    // 108 too low
   }
 }
