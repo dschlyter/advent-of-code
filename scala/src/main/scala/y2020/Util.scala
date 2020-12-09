@@ -13,7 +13,7 @@ object Util {
     }
   }
 
-  def groupInput(inputName: String, delimiter: String = ""): Vector[Vector[String]] = {
+  def groupedInput(inputName: String, delimiter: String = ""): Vector[Vector[String]] = {
     val input = readInput(inputName)
 
     input.foldLeft(Vector(Vector[String]()))((agg, a) => {
