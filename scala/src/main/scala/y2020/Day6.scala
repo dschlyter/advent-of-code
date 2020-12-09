@@ -3,7 +3,7 @@ import scala.collection.{mutable => m}
 
 object Day6 {
   def main(args: Array[String]): Unit = {
-    val input = Util.groupInput("day6")
+    val input = Util.groupedInput("day6")
 
     // part 1
     val part1 = input.map(group => {

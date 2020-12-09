@@ -63,7 +63,5 @@ object Day7 {
       m.getOrElse(bag, List()).map(b => b._2 + b._2 * inside(b._1)).sum
     }
     println(inside("shiny gold"))
-
-    // 11840 wrong too low
   }
 }
