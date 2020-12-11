@@ -6,8 +6,8 @@ object Day10 {
   def main(args: Array[String]): Unit = {
     val input = Util.readInput("day10")
 
-    val parsed = input.map(str => str.toLong).toVector.sorted
-    val chain = Vector(0L) ++ parsed ++ Vector(parsed.max+3L)
+    val parsed = input.map(str => str.toLong).toVector
+    val chain = Vector(0L) ++ parsed.sorted ++ Vector(parsed.max+3L)
 
     println(chain)
 
@@ -35,7 +35,6 @@ object Day10 {
       val n = chain(i)
       val ways = m.getOrElse(n-1, 0L) + m.getOrElse(n-2, 0L) + m.getOrElse(n-3, 0L)
       m.put(n, ways)
-      println(n, ways)
     }
 
     println("part2: " + m(chain.last))
