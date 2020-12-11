@@ -24,4 +24,13 @@ object Util {
       }
     })
   }
+
+  var lastTime = 0L
+
+  def time(desc: String): Unit = {
+    if (lastTime > 0) {
+      println("TIME "+desc+": "+((System.nanoTime() - lastTime) / 1e9))
+    }
+    lastTime = System.nanoTime()
+  }
 }
