@@ -4,10 +4,10 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 object Util {
   def hello = "hello"
 
-  def readInput(inputName: String): List[String] = {
+  def readInput(inputName: String): Vector[String] = {
     val source = io.Source.fromFile(s"src/main/scala/y2020/input/$inputName.txt")
     try {
-      source.getLines.toList
+      source.getLines.toVector
     } finally {
       source.close()
     }
