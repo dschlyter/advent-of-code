@@ -68,8 +68,6 @@ object Day16 {
     println(mappedTicket.filter(_._1.contains("departure")).values.map(_.toLong).product)
   }
 
-
-
   private def validNumber(parsedRules: Vector[(String, Vector[Vector[Int]])], num: Int): Boolean =  {
     parsedRules.exists(rule => validNumber(rule, num))
   }
