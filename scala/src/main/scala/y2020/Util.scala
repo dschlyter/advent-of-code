@@ -14,15 +14,22 @@ object Util {
   }
 
   def groupedInput(inputName: String, delimiter: String = ""): Vector[Vector[String]] = {
-    val input = readInput(inputName)
+    groupInput(readInput(inputName), delimiter)
+  }
 
-    input.foldLeft(Vector(Vector[String]()))((agg, a) => {
+  def groupInput(input: Vector[String], delimiter: String = "") =  {
+    val grouped = input.foldLeft(Vector(Vector[String]()))((agg, a) => {
       if (a == delimiter) {
         agg ++ Vector(Vector[String]())
       } else {
         agg.dropRight(1) :+ (agg.last :+ a)
       }
     })
+
+    grouped.last match {
+      case Vector() => grouped.dropRight(1)
+      case _ => grouped
+    }
   }
 
   var lastTime = 0L
