@@ -7,11 +7,13 @@
 
 set -e
 
+# change this each year
+curr_year="2021"
+file_ending="jl"
+
 curr_date="$(date '+%-d')"
-curr_year="$(date '+%-Y')"
 date="${1:-$curr_date}"
 cookie="$(cat $HOME/.secrets/advent-cookie)"
-file_ending="scala"
 
 curl "https://adventofcode.com/$curr_year/day/$date/input" \
     -H 'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8' \
