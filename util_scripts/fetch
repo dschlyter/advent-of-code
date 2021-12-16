@@ -29,12 +29,14 @@ cat input/day$date.txt | head -n 20
 
 
 ydate=$((date - 1))
-old_file="Day$ydate.${file_ending}"
-new_file="Day$date.${file_ending}"
+old_file="day$ydate.${file_ending}"
+new_file="day$date.${file_ending}"
 if [[ -f "$old_file" ]]; then
     cp "$old_file" "$new_file"
     sed -i -e "s/day$ydate/day$date/" "$new_file"
     sed -i -e "s/Day$ydate/Day$date/" "$new_file"
-    rm "$new_file"-e
+    if [[ -f "$new_file"-e ]]; then
+        rm "$new_file"-e
+    fi
     # sed -i "s/day.*rs/day$date.rs/" ../Cargo.toml
 fi

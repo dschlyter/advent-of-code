@@ -10,6 +10,9 @@ function count_values(values)
     d
 end
 
+function dict_add()
+end
+
 function mode(values)
     d = count_values(values)
     pairs = collect(d)

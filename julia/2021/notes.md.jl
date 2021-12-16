@@ -54,7 +54,8 @@
     l3 = [i for i in l2 if i%2 == 0]
 
     l4 = copy(l3)
-    append!(l4, [100])
+    push!(l4, 100)
+    append!(l4, [1,2,3])
 
     # concat
     [l1; l2]
@@ -95,6 +96,9 @@
     push!(s, 4)
     in(4, s)
     union(s, Set([4,5]))
+    intersect(s, s)
+    setdiff(s, s)
+    issubset(s, s)
 
 ## Tuples and named tuples
 
@@ -181,3 +185,31 @@
 
     # rationals
     numerator(2 // 3)
+
+# Packages
+
+    # Can be installed inline in the code
+    using Pkg
+    Pkg.add("Packagename")
+
+## Priority queue - kinda weird since values set the priority (not the key)
+
+    using Pkg
+    Pkg.add("DataStructures"); 
+    using DataStructures;
+
+    # keys must be unique, and there is no 
+    id = 0
+
+    # enqueue but skip if existing and lower
+    function enq(q, k, v)
+        q[k] = min(get(q, k, v), v)
+    end
+
+    q = PriorityQueue()
+    enq(q, "first value", 10)
+    enq(q, "second value", 2)
+    enq(q, "first value", 1)
+
+    v1, v2 = dequeue!(q), dequeue!(q)
+
