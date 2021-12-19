@@ -71,11 +71,15 @@
     # broadcast operations
     [1,2,3] .+ 5
 
-    # matrix with columns
+    # matrix with rows
+    [1 2 3; 
+     4 5 6]
+
+    # matrix with columns (note: you need commas within column)
     [[1,2,3] [4,5,6]]
 
-    # matrix with rows
-    [[1 2 3];; [4 5 6]]
+    # vector of vectors (comma in the middle)
+    [[1,2,3], [4,5,6]]
 
 ## Sorting
 
@@ -145,6 +149,10 @@
     end
     f = Foo(1, 2, 3.0)
     fieldnames(Foo)
+
+    mutable struct FooM
+        bar
+    end
 
 ## Create constructors by defining new methods
 
