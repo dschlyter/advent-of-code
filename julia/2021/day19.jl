@@ -53,7 +53,7 @@ function rot_points(points, rot)
 end
 
 function part1()
-    points = scanners[1]
+    points = [p for p in scanners[1]]
     included = Set([1])
     tested = Set()
     scanner_pos = Set([[0,0,0]])
@@ -63,32 +63,47 @@ function part1()
             break
         end
 
-        testing_points = points
+        original_points = points
 
-        for oi in 1:length(scanners)
-            if oi in included
+        for p1 in points
+            if in(p1, tested)
                 continue
             end
-            other_scanner = scanners[oi]
-            rotated_points = [rot_points(other_scanner, rot) for rot in rotations]
+            # we can stop testing if we only have 11 points left. mark all remaining as tested.
+            if length(tested) >= length(original_points) - 11
+                push!(tested, p1)
+                continue
+            end
+            push!(tested, p1)
 
-            for other_points in rotated_points
-                for p1 in points
-                    if in(p1, tested)
-                        continue
-                    end
+            for oi in 1:length(scanners)
+                if in(oi, included)
+                    continue
+                end
 
+                other_scanner = scanners[oi]
+                rotated_points = [rot_points(other_scanner, rot) for rot in rotations]
+
+                for other_points in rotated_points
+                    test_count = 0
                     for p2 in other_points
                         # less than optimal skip
                         if oi in included
                             break
                         end
 
+                        # opt, since 12 points need to match, you don't need to test all points
+                        if test_count >= length(other_points) - 11
+                            break
+                        end
+                        test_count += 1
+
                         offset = p1 - p2
                         ost = translate(other_points, offset)
                         matched = length(intersect(points, ost))
                         if matched >= 12
                             println("ost! ", oi, " ", matched)
+                            # search through new points first, should be faster
                             points = union(points, ost)
                             push!(scanner_pos, -offset)
                             push!(included, oi)
@@ -97,10 +112,6 @@ function part1()
                 end
             end
         end
-
-        # code is slow, this is a dirty opt
-        # once a point has been tested, don't re-test it (potentially this will break stuff, unsure)
-        tested = union(tested, testing_points)
     end
 
     println("segments: ", length(included))
@@ -109,6 +120,10 @@ function part1()
     scanner_pos
 end
 scan_pos = @time part1()
+
+# 176 seconds execution time, with tested-set opt
+# 120s with p1 in the outer loop
+# 15s with 12 point check opt
 
 
 ## part 2
