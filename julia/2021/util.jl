@@ -6,9 +6,6 @@ function count_values(values)
     d
 end
 
-function dict_add()
-end
-
 function mode(values)
     d = count_values(values)
     pairs = collect(d)
@@ -27,4 +24,13 @@ function wrap(pos, low, high)
         pos += (high - low + 1)
     end
     (pos - low) % (high - low + 1) + low
+end
+
+function cap(pos, low, high)
+    max(low, min(pos, high))
+end
+
+# push to priority queue, overwrite only if lower
+function prio_push(q, node, score)
+    q[node] = min(score, get(q, node, score))
 end
