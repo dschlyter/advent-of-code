@@ -6,7 +6,7 @@ z *= y
 y = (w + 3) * x
 z += y
 
-doit =  z % 26 - w != 7
+doit =  z % 26 - 7 != w
 z = z / 26 # only sometimes
 if doit
     z *= 26
@@ -18,6 +18,9 @@ div z 26 or 1:
 
 eq:
 -10 -15 -14 -15 8 -10 16 4 -11 3 -12 7 15 7 
+
+add:
+2 16 9 0 1 12 6 3 5 9 3 2 3
 
 
 

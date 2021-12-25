@@ -139,15 +139,33 @@ end
 # --- attempt 2
 
 state_count = 0
+best = 10^9
+best_res = nothing
+best_pos = 1
 
 function run_program2(program, pos, reg1, seen, search)
     # Check end
     if pos > length(program)
-        if reg1["z"] == 0
-            log("found success!", search)
-            return search
+        if best == 10^9
+            log("the end?")
+            best -= 1
+        end
+        global best
+        if reg1["z"] < best
+            best = reg1["z"]
+            best_res = search
+            log("found success!", search, best)
+            if reg1["z"] == 0
+                return search
+            end
         end
         return nothing
+    end
+
+    global best_pos
+    if pos > best_pos
+        best_pos = pos
+        log("pos", best_pos, length(search))
     end
 
     inst = program[pos]
@@ -160,33 +178,29 @@ function run_program2(program, pos, reg1, seen, search)
     global state_count
     state_count += 1
     if state_count % 1000000 == 0
-        println(state_count, search)
+        log(state_count, search)
     end
 
     # reg = deepcopy(reg1)
     reg = reg1
 
     if cmd == "inp"
-        # Don't continue from states already searched
-        # Check this before every branch
-        # key = (pos, reg1)
-        # if key in seen
-            # return nothing
-        # end
-        # key that won't be mutated
-        # key2 = (pos, reg["z"])
-        # push!(seen, key2)
-        # if length(seen) % 100000 == 0
-            # log(length(seen), search)
-        # end
-
-        if reg["z"] > 26^min(7, 14 - length(search) + 1)
+        # in each step we divide by 26, so number has an upper bound before it cannot be reduced
+        if reg["z"] > 26^min(8, 14 - length(search) + 2)
             return nothing
         end
 
-        reg = deepcopy(reg1)
+        key = (pos, reg["z"])
+        if key in seen
+            return nothing
+        end
+        push!(seen, key)
 
-        for input in 9:-1:1
+        # for part 1 vs part 2
+        # for input in 9:-1:1
+        for input in 1:9
+            reg = deepcopy(reg1)
+
             if pos == 1
                 log("testing first", input)
             end
@@ -243,6 +257,8 @@ function part1_2()
 end
 @time part1_2()
 
+log("best result", best, best_res)
+
 ## attept 3 - partually manual
 
 function part1_3()
@@ -250,7 +266,10 @@ function part1_3()
     # input = [parse(Int, c) for c in "99999998216338"]
     println(join([string(i) for i in input], ""))
 
-    input = [9, 9, 9, 9, 1, 7, 4, 6, 9, 9, 9, 9, 9, 4]
+    # input = [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
+    # input = [1, 9, 9, 9, 1, 7, 4, 6, 9, 9, 9, 9, 9, 4]
+    # input = [1, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
+    input = [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 7, 9, 9, 4]
 
     for i in 1:9
         println(input)
