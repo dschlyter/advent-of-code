@@ -6,3 +6,4 @@ Advent of Code
 * 2019 [Rust](rust) / [Python](python)
 * 2020 [Scala](scala)
 * 2021 [Julia](julia)
+* 2022 Elixir? Zig?
