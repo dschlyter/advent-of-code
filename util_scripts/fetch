@@ -2,14 +2,15 @@
 
 # Setup:
 # 1. Fetch an input with the webinspector
-# 2. Save your cookie header to ~/.secrets/advent-cookie
+# 2. Save your cookie header to ~/.secrets/advent-cookie (session= should be included)
 # 3. Make sure the "input" dir is created (this will not be created automatically since you might be in the wrong directory)
 
 set -e
 
 # change this each year
-curr_year="2021"
-file_ending="jl"
+curr_year="2022"
+file_ending="ts"
+file_prefix="src/"
 
 curr_date="$(date '+%-d')"
 date="${1:-$curr_date}"
@@ -29,8 +30,8 @@ cat input/day$date.txt | head -n 20
 
 
 ydate=$((date - 1))
-old_file="day$ydate.${file_ending}"
-new_file="day$date.${file_ending}"
+old_file="${file_prefix}day$ydate.${file_ending}"
+new_file="${file_prefix}day$date.${file_ending}"
 if [[ -f "$old_file" ]]; then
     cp "$old_file" "$new_file"
     sed -i -e "s/day$ydate/day$date/" "$new_file"
