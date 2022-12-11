@@ -12,7 +12,7 @@ function read(file: string): Promise<string> {
 }
 
 async function readLines(file: string): Promise<string[]> {
-    return (await read(file)).split("\n")
+    return (await read(file)).trim().split("\n")
 }
 
 export {

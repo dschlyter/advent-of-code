@@ -1,14 +1,14 @@
 import { readLines } from './util'
 import * as _ from 'lodash';
 
-async function main() {
+async function main(): Promise<void> {
   const input = await readLines("input/day1.txt")
 
   await part1(input)
   await part2(input)
 }
 
-async function part1(input: string[]) {
+async function part1(input: string[]): Promise<void> {
   let s = 0, m = 0
   for (const line of input) {
     if (line == "") {
@@ -22,7 +22,7 @@ async function part1(input: string[]) {
   console.log(m)
 }
 
-async function part2(input: string[]) {
+async function part2(input: string[]): Promise<void> {
   let s = [0]
   for (const line of input) {
     if (line == "") {
