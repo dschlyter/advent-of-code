@@ -15,7 +15,14 @@ async function readLines(file: string): Promise<string[]> {
     return (await read(file)).trim().split("\n")
 }
 
+function ints(row: string): Array<number> {
+    let f = row.replace(/[^-0-9]/g, ' ')
+    let r = f.split(" ").filter(s => s != "").filter(s => s != "-").map(x => parseInt(x))
+    return r
+}
+
 export {
     read,
-    readLines
+    readLines,
+    ints
 }
