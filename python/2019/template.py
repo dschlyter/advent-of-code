@@ -1,20 +1,22 @@
 import sys
 from collections import defaultdict
-from queue import Queue
+from queue import Queue, PriorityQueue
+from typing import List
 
 import util
 
 sys.setrecursionlimit(15000)
 
 
-def part1(lines):
-    ans = 0
+def part1(lines: List[str]):
+    ans = None
 
     print("part 1 answer", ans)
 
 
-def part2(lines):
-    ans = 0
+def part2(lines: List[str]):
+    ans = None
+
     print("part 2 answer", ans)
 
 
