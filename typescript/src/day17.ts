@@ -47,15 +47,16 @@ function printState(block: Shape, occupied: {[a: string]: boolean}) {
   }
 }
 
+const shapes: Array<Shape> = [
+  [[0,0], [0,1], [0,2], [0,3]],
+  [[2,1], [1,0], [1,1], [1,2], [0,1]],
+  [[2,2], [1,2], [0,0], [0,1], [0,2]],
+  [[3,0], [2,0], [1,0], [0,0]],
+  [[1,0], [1,1], [0,0], [0,1]],
+]
+
 async function part1(input: string[]): Promise<void> {
   let pushes = input[0]
-  let shapes: Array<Shape> = [
-    [[0,0], [0,1], [0,2], [0,3]],
-    [[2,1], [1,0], [1,1], [1,2], [0,1]],
-    [[2,2], [1,2], [0,0], [0,1], [0,2]],
-    [[3,0], [2,0], [1,0], [0,0]],
-    [[1,0], [1,1], [0,0], [0,1]],
-  ]
 
   const minX = 0, maxX = 7
 
@@ -87,22 +88,92 @@ async function part1(input: string[]): Promise<void> {
         break
       }
 
-      // printState(block, occupied)
     }
     for (let [y, x] of block) {
       occupied[`${y},${x}`] = true
       highestBlock = Math.max(highestBlock, y)
     }
-    console.log("dropping block", blockCount)
     // printState(block, occupied)
   }
 
-  // let highestBlock = Object.keys(occupied).map(x => parseInt(x.split(",")[0])).reduce((a,b) => Math.max(a,b), -1)
   console.log(highestBlock + 1)
 }
 
 async function part2(input: string[]): Promise<void> {
+  let pushes = input[0]
 
+  const minX = 0, maxX = 7
+  const target = 1000000000000
+
+  let highestBlock = -1
+  let time = 0
+  let occupied: {[a: string]: boolean} = {}
+
+  let repeats = {}
+  let passedBlocks = 0
+  let passedHeight = 0
+
+  for (let blockCount=0; blockCount + passedBlocks < target; blockCount++) {
+    // Init block position
+    let block = shapes[blockCount % shapes.length]
+    block = translate(block, [0, 2])
+    block = translate(block, [highestBlock+4, 0])
+    
+    while (true) {
+      // Push block to the side
+      let push = pushes[time % pushes.length]
+      // console.log(push)
+      let pushedBlock = translate(block, push == ">" ? [0, 1]: [0, -1])
+      time += 1
+      if (pushedBlock.every(([y, x]) => x >= minX && x < maxX && !occupied[`${y},${x}`])) {
+        block = pushedBlock
+      }
+
+      // Pushed down
+      let dropped = translate(block, [-1, 0])
+      if (dropped.every(([y, x]) => y >= 0 && !occupied[`${y},${x}`])) {
+        block = dropped
+      } else {
+        break
+      }
+    }
+    for (let [y, x] of block) {
+      occupied[`${y},${x}`] = true
+      highestBlock = Math.max(highestBlock, y)
+    }
+
+    let key = `${time % pushes.length},${blockCount % shapes.length}`
+    let r = repeats[key]
+    if (!r) {
+      repeats[key] = {
+        baseBlocks: blockCount,
+        baseHeight: highestBlock,
+        count: 0,
+        blocks: -1,
+        height: -1,
+      }
+    } else if (passedBlocks == 0) {
+      r.count += 1
+      if (r.count == 1) {
+        r.height = highestBlock - r.baseHeight
+        r.blocks = blockCount - r.baseBlocks
+      } else if (r.count > 10) {
+        let shouldBe = r.baseHeight + r.count * r.height
+        if (shouldBe == highestBlock) {
+          // This seems to be a reliable point of repetition
+          let blocksLeft = target - blockCount
+          let repeatsLeft = Math.floor(blocksLeft / r.blocks)
+          passedBlocks = repeatsLeft * r.blocks
+          passedHeight = repeatsLeft * r.height
+          console.log("found repeat at", blockCount, "will repeat", repeatsLeft, "times")
+        } else {
+          console.log("bad point for repeat", shouldBe, "!=", highestBlock)
+        }
+      }
+    }
+  }
+
+  console.log(passedHeight + highestBlock + 1)
 }
 
 main()
