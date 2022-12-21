@@ -4,4 +4,5 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-npx tsc -w --outDir exec src/*.ts
+# picking es5 target since es3 gives some errors, and higher gives error 'Cannot use import statement outside a module'
+npx tsc -w -target es5 --outDir exec src/*.ts
