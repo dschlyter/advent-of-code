@@ -7,5 +7,6 @@ Advent of Code
 * 2020 [Scala](scala)
 * 2021 [Julia](julia)
 * 2022 [Typescript](typescript)
+* 2023 [Python](python)
 
 Next year: Elixir? Zig?

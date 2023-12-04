@@ -4,14 +4,17 @@
 set -euo pipefail
 # IFS=$'\n\t'
 
-day=$1
-program=$(echo "day"$1*)
+curr_date="$(date '+%-d')"
+day=${1:-$curr_date}
+program=$(echo "day"$day*)
 
 input=${2:-}
 
 if [[ "$program" == *.rs ]]; then
     export RUST_BACKTRACE=1
     ex="cargo run"
+elif [[ "$program" == *.rs ]]; then
+    ex="python"
 else
     echo "Unsupported program $program"
     exit 1
