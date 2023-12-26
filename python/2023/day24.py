@@ -5,6 +5,9 @@ import sys
 from collections import defaultdict
 from queue import Queue, PriorityQueue
 
+# pip install sympy
+from sympy import symbols, solveset, Eq, linsolve, nonlinsolve
+
 suffix = sys.argv[1] if len(sys.argv) > 1 else ""
 infile = f"input/day24{suffix}.txt"
 
@@ -67,10 +70,29 @@ def parse(lines):
     return r
 
 
-
-
 def problem2():
-    pass
+    with open(infile) as fp:
+        lines = [l.strip() for l in fp]
+
+    hails = parse(lines)
+
+    x, y, z, xv, yv, zv = symbols('x y z xv yv zv')
+    system = []
+    times = []
+    # looking at all hails is too slow, first 10 are enough for a unique solution
+    for i, hail in enumerate(hails[:10]):
+        hx, hy, hz, hxv, hyv, hzv = hail
+        t = symbols(f"t{i}")
+        times.append(t)
+        system.append(x + t * xv - (hx + t * hxv))
+        system.append(y + t * yv - (hy + t * hyv))
+        system.append(z + t * zv - (hz + t * hzv))
+    
+    s = nonlinsolve(system, [x, y, z, xv, yv, zv] + times)
+    for s1 in s:
+        print("solution", s1)
+        x, y, z, *rest = s1
+        print(x + y + z)
 
 
 def get(l, i):
