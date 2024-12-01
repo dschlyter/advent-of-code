@@ -8,5 +8,6 @@ Advent of Code
 * 2021 [Julia](julia)
 * 2022 [Typescript](typescript)
 * 2023 [Python](python)
+* 2024 [Rust](rust)
 
 Next year: Elixir? Zig?

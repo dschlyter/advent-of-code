@@ -8,9 +8,9 @@
 set -e
 
 # change this each year
-curr_year="2023"
-file_ending="py"
-file_prefix=""
+curr_year="2024"
+file_ending="rs"
+file_prefix="src"
 
 curr_date="$(date '+%-d')"
 date="${1:-$curr_date}"
