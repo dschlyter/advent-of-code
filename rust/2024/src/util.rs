@@ -1,7 +1,7 @@
 use std::{collections::HashMap, env, fs::read_to_string, hash::Hash};
 
 pub fn input_for(filename: &str) -> String {
-    let day_name = filename.replace("src/", "").replace(".rs", "");
+    let day_name = filename.replace("src/bin", "").replace(".rs", "");
     let args: Vec<String> = env::args().collect();
     let suffix = args.get(1).cloned().unwrap_or(String::default());
     let input_file = format!("input/{}{}.txt", day_name, suffix);

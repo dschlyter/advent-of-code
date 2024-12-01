@@ -2,8 +2,7 @@
 
 use std::collections::HashMap;
 
-use super::util;
-
+use aoc2024::util;
 
 pub fn main() {
     let lines = util::read_lines(&util::input_for(file!()));
