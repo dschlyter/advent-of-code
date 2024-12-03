@@ -1,11 +1,39 @@
 use std::{collections::HashMap, env, fs::read_to_string, hash::Hash};
+use std::path::Path;
 
-pub fn input_for(filename: &str) -> String {
-    let day_name = filename.replace("src/bin", "").replace(".rs", "");
+pub fn run_for_inputs(code_filename: &str, solve: fn(String)) {
+    let arg = suffix_arg(code_filename);
+    match arg {
+        None => {
+            solve_if_exists(input_with_suffix(&code_filename, "_test".into()), solve);
+            solve_if_exists(input_with_suffix(&code_filename, "_test2".into()), solve);
+            solve_if_exists(input_with_suffix(&code_filename, "".into()), solve);
+        }
+        Some(suffix) => solve_if_exists(input_with_suffix(&code_filename, suffix), solve)
+    }
+}
+
+fn solve_if_exists(input_file: String, solve: fn(String)) {
+    if Path::new(&input_file).exists() {
+        solve(input_file);
+    } else {
+        println!("Input file {} not found, skipping...", &input_file);
+    }
+}
+
+fn suffix_arg(filename: &str) -> Option<String> {
     let args: Vec<String> = env::args().collect();
-    let suffix = args.get(1).cloned().unwrap_or(String::default());
+    return args.get(1).cloned();
+}
+
+fn input_with_suffix(filename: &str, suffix: String) -> String {
+    let day_name = filename.replace("src/bin/", "").replace(".rs", "");
     let input_file = format!("input/{}{}.txt", day_name, suffix);
     return input_file
+}
+
+pub fn input_for(filename: &str) -> String {
+    return input_with_suffix(filename, suffix_arg(filename).unwrap_or(String::default()));
 }
 
 // https://doc.rust-lang.org/rust-by-example/std_misc/file/read_lines.html

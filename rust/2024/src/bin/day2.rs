@@ -6,14 +6,18 @@ use std::collections::HashSet;
 use aoc2024::util;
 
 pub fn main() {
+    util::run_for_inputs(file!(), solve);
+}
+
+pub fn solve(filename: String) {
     // Input
 
-    let lines = util::read_lines(&util::input_for(file!()));
+    let lines = util::read_lines(&filename);
     let numLines: Vec<Vec<i32>> = lines.iter().map(|line| {
         line.split_whitespace().map(|s| s.parse::<i32>().unwrap()).collect()
     }).collect();
 
-    dbg!(&numLines);
+    // dbg!(&numLines);
 
     // Part 1
 
