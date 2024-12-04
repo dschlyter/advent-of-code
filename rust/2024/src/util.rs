@@ -52,8 +52,17 @@ pub fn count<T: Eq + Hash>(map: &mut HashMap<T, i32>, key: T) {
     *counter += 1;
 }
 
-// ignore unused
-#[allow(dead_code)]
-pub fn hello() {
-    println!("Hello World Util!"); 
+// Grid utils
+
+pub fn to_grid(lines: &Vec<String>) -> Vec<Vec<String>> {
+    lines.into_iter().map(|s| s.chars().map(|c| c.to_string()).collect()).collect()
 }
+
+pub fn grid_get(grid: &Vec<Vec<String>>, y: i32, x: i32) -> Option<&String> {
+    return grid.get(y as usize).and_then(|line| line.get(x as usize));
+}
+
+
+
+// ignore unused
+// #[allow(dead_code)]
