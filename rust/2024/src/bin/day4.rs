@@ -4,6 +4,7 @@
 use std::collections::HashMap;
 #[allow(unused_imports)]
 use std::collections::HashSet;
+#[allow(unused_imports)]
 use regex::Regex;
 
 use aoc2024::util::{self, run_for_inputs};
@@ -46,6 +47,7 @@ pub fn solve(filename: String) {
 
 
     // Part 2
+   {
         let mut res = 0;
 
         for y in 0..grid.len() {
@@ -73,8 +75,6 @@ pub fn solve(filename: String) {
 
         // dbg!(&lines[0].chars().nth());
         println!("{}", res);
-   {
-
     }
 }
 
@@ -88,7 +88,6 @@ pub fn dfs(grid: &Vec<Vec<String>>, y: usize, x: usize, yd: i32, xd: i32, target
         if target.len() == 1 {
             return 1;
         } else {
-            let mut res = 0;
             let tail = target.clone().split_off(1);
 
             let y2 = y as i32 + yd;

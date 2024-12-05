@@ -1,5 +1,6 @@
 // #![allow(unused_imports)]
 
+#[allow(unused_imports)]
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -13,7 +14,7 @@ pub fn solve(filename: String) {
     // Input
 
     let lines = util::read_lines(&filename);
-    let numLines: Vec<Vec<i32>> = lines.iter().map(|line| {
+    let num_lines: Vec<Vec<i32>> = lines.iter().map(|line| {
         line.split_whitespace().map(|s| s.parse::<i32>().unwrap()).collect()
     }).collect();
 
@@ -24,7 +25,7 @@ pub fn solve(filename: String) {
     {
         let mut res = 0;
 
-        for nums in numLines.iter() {
+        for nums in num_lines.iter() {
             if is_safe(nums) {
                 res += 1;
             }
@@ -39,7 +40,7 @@ pub fn solve(filename: String) {
     {
         let mut res = 0;
 
-        for nums in numLines.iter() {
+        for nums in num_lines.iter() {
             if is_safe(nums) {
                 res += 1;
             } else {

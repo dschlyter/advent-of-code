@@ -4,13 +4,13 @@ Install Rust https://www.rust-lang.org/tools/install
 
 Install rust-analyser for vscode
 
-TODO CodeLLDB plugin
+TODO CodeLLDB plugin?
 
 ## Run
 
     cargo run --bin day1
 
-or 
+or run a specific test file
 
     cargo run --bin day1 _test
 
