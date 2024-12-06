@@ -2,7 +2,7 @@ use std::{collections::HashMap, env, fs::read_to_string, hash::Hash};
 use std::path::Path;
 
 pub fn run_for_inputs(code_filename: &str, solve: fn(String)) {
-    let arg = suffix_arg(code_filename);
+    let arg = suffix_arg();
     match arg {
         None => {
             solve_if_exists(input_with_suffix(&code_filename, "_test".into()), solve);
@@ -21,7 +21,7 @@ fn solve_if_exists(input_file: String, solve: fn(String)) {
     }
 }
 
-fn suffix_arg(filename: &str) -> Option<String> {
+fn suffix_arg() -> Option<String> {
     let args: Vec<String> = env::args().collect();
     return args.get(1).cloned();
 }
@@ -33,7 +33,7 @@ fn input_with_suffix(filename: &str, suffix: String) -> String {
 }
 
 pub fn input_for(filename: &str) -> String {
-    return input_with_suffix(filename, suffix_arg(filename).unwrap_or(String::default()));
+    return input_with_suffix(filename, suffix_arg().unwrap_or(String::default()));
 }
 
 // https://doc.rust-lang.org/rust-by-example/std_misc/file/read_lines.html

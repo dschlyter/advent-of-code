@@ -72,13 +72,13 @@ pub fn solve(filename: String) {
 
         for line in update {
             let mut pages: Vec<&str> = line.split(",").collect();
-            let mut pages_before: HashSet<String> = HashSet::new();
+            let mut pages_before: HashSet<&str> = HashSet::new();
             let mut valid = true;
 
             for i in 0..pages.len() {
                 let p = pages[i];
                 let default_set = HashSet::default();
-                let needs_to_be_after = ordering.get(p).unwrap_or(&default_set);
+                let needs_to_be_after: HashSet<&str> = ordering.get(p).unwrap_or(&default_set).iter().map(|s| s.as_str()).collect();
 
                 if !pages_before.is_disjoint(&needs_to_be_after) {
                     valid = false;
@@ -94,7 +94,7 @@ pub fn solve(filename: String) {
                     }
                 }
 
-                pages_before.insert(p.to_string());
+                pages_before.insert(p);
             }
 
             if !valid {
