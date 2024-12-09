@@ -67,16 +67,33 @@ pub fn solve(filename: String) {
     println!("{}", part1_answer);
 
 
-    // Slow 10 seconds
-    // More opt would be to maintain a list of free space of course
+    // First attempt, scan through entire list each time - slow 10 seconds
+    // Second attempt, maintain a list of free space - 1 second
     let part2_answer = {
         let mut disk1 = disk.clone();
+
+        let mut free_list: Vec<(usize, usize)> = Vec::new();
+
+        let mut start_pos = 0;
+        let mut gap_size = 0;
+        for (pos, file) in disk1.iter().enumerate() {
+            if *file == -1 {
+                if gap_size == 0 {
+                    start_pos = pos;
+                }
+                gap_size += 1;
+            } else {
+                if gap_size > 0 {
+                    free_list.push((start_pos, gap_size));
+                }
+                gap_size = 0;
+            }
+
+        }
 
         let mut file = (disk_map.len() / 2) as i32;
         i = disk1.len() - 1;
         while file > 0 {
-            println!("{}:{}: {:?}", file!(), line!(), (file));
-
             // Find the target file and size
             while disk1[i] != file {
                 i -= 1;
@@ -86,37 +103,24 @@ pub fn solve(filename: String) {
                 i -= 1;
                 file_size += 1;
             }
-
-            // Find the best gap O(n^2)
             let file_start = i + 1;
-            let mut j = i;
-            let mut gap_size = 0;
-            let mut best_pos = file_start;
-            while j > 0 {
-                if disk1[j] == -1 {
-                    gap_size += 1;
-                } else {
-                    gap_size = 0;
-                }
-                if gap_size >= file_size {
-                    best_pos = j;
-                }
-                j -= 1;
-            }
 
-            // Move file if a gap exists
-            if best_pos < file_start {
-                // println!("{}:{}: {:?}", file!(), line!(), ("move to", best_pos));
-                for k in 0..file_size {
-                    disk1[best_pos+k] = file;
-                    disk1[file_start+k] = -1;
+            for gap in free_list.iter_mut() {
+                if gap.1 >= file_size && gap.0 < file_start {
+                    for offset in 0..file_size {
+                        disk1[gap.0 + offset] = file;
+                        disk1[file_start + offset] = -1;
+                    }
+                    gap.0 += file_size;
+                    gap.1 -= file_size;
+                    break
                 }
             }
 
             file -= 1;
         }
 
-        println!("{}:{}: {:?}", file!(), line!(), (disk1));
+        // println!("{}:{}: {:?}", file!(), line!(), (disk1));
 
         let mut checksum: i64 = 0;
         for (i, file) in disk1.iter().enumerate() {
