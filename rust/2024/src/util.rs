@@ -1,4 +1,5 @@
-use std::{collections::HashMap, env, fs::read_to_string, hash::Hash};
+use std::{env, fs::read_to_string, hash::Hash};
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 pub fn run_for_inputs(code_filename: &str, solve: fn(String)) {
@@ -60,6 +61,20 @@ pub fn to_grid(lines: &Vec<String>) -> Vec<Vec<String>> {
 
 pub fn grid_get(grid: &Vec<Vec<String>>, y: i32, x: i32) -> Option<&String> {
     return grid.get(y as usize).and_then(|line| line.get(x as usize));
+}
+
+pub fn grid_mapped_by_cell<'a>(grid: &'a Vec<Vec<String>>, ignore: &HashSet<String>) -> HashMap<&'a String, Vec<(i32, i32)>> {
+    let mut ret = HashMap::new();
+
+    for (y, row) in grid.iter().enumerate() {
+        for (x, cell) in row.iter().enumerate() {
+            if !ignore.contains(cell) {
+                ret.entry(cell).or_insert(Vec::new()).push((y as i32,x as i32));
+            }
+        }
+    }
+    
+    ret
 }
 
 

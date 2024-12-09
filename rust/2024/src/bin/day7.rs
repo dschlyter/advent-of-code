@@ -37,6 +37,7 @@ pub fn solve(filename: String) {
 
     // Part 2
     // Slow 33 seconds
+    // With filter opt 26s
     // Possible opt - do it backwards with subtraction, division and suffix trimming. Any non-zero, non-integer or non-suffix can be discarded.
     {
         let mut res = 0;
@@ -44,11 +45,15 @@ pub fn solve(filename: String) {
             println!("{}:{}: {:?}", file!(), line!(), (i, targets.len()));
 
             let mut possibilities: HashSet<i64> = [1].into();
+            let curr_target = targets[i];
             for arg in al {
-                possibilities = possibilities.iter().flat_map(|f| [f + arg, f * arg, (f.to_string() + &arg.to_string()).parse::<i64>().unwrap()]).collect();
+                possibilities = possibilities.iter()
+                    .flat_map(|f| [f + arg, f * arg, (f.to_string() + &arg.to_string()).parse::<i64>().unwrap()])
+                    .filter(|n| n <= &curr_target) // Opt, operations always increase number so cull all that overshoot
+                    .collect();
             }
-            if possibilities.contains(&targets[i]) {
-                res += targets[i];
+            if possibilities.contains(&curr_target) {
+                res += curr_target;
             }
         }
         println!("{}", res);
