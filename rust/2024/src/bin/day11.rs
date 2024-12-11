@@ -20,7 +20,7 @@ pub fn solve(filename: String) {
     let part1_answer = {
         let mut ans = 0;
         for stone in stones.iter() {
-            ans += number_of_stones(stone, 25, &mut mem);
+            ans += number_of_stones((stone.clone(), 25), &mut mem);
         }
         ans
     };
@@ -30,33 +30,32 @@ pub fn solve(filename: String) {
     let part2_answer = {
         let mut ans = 0;
         for stone in stones.iter() {
-            ans += number_of_stones(&stone, 75, &mut mem);
+            ans += number_of_stones((stone.clone(), 75), &mut mem);
         }
         ans
     };
     println!("{}", part2_answer);
 }
 
-pub fn number_of_stones(stone_value: &String, blinks: i32, mem: &mut HashMap<(String, i32), i64>) -> i64 {
-    let key = (stone_value.to_string(), blinks);
+pub fn number_of_stones(key: (String, i32), mem: &mut HashMap<(String, i32), i64>) -> i64 {
+    let (stone_value, blinks) = &key;
 
     if let Some(memed) = mem.get(&key) {
         return *memed;
     }
 
-    let ret = if blinks == 0 {
-        // println!("{}:{}: {:?}", file!(), line!(), (&stone_value));
+    let ret = if *blinks == 0 {
         1 
     } else if stone_value == "0" {
-        number_of_stones(&"1".into(), blinks-1, mem)
+        number_of_stones(("1".into(), blinks-1), mem)
     } else if stone_value.len() % 2 == 0 {
         let (p1, p2) = stone_value.split_at(stone_value.len() / 2);
         let s1 = p1.parse::<i64>().unwrap().to_string();
         let s2 = p2.parse::<i64>().unwrap().to_string();
-        number_of_stones(&s1, blinks-1, mem) + number_of_stones(&s2, blinks-1, mem)
+        number_of_stones((s1, blinks-1), mem) + number_of_stones((s2, blinks-1), mem)
     } else {
         let new_value =  stone_value.parse::<i64>().unwrap() * 2024;
-        number_of_stones(&new_value.to_string(), blinks-1, mem)
+        number_of_stones((new_value.to_string(), blinks-1), mem)
     };
 
     mem.insert(key, ret);
