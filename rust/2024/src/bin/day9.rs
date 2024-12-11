@@ -22,14 +22,14 @@ pub fn solve(filename: String) {
     let mut i: usize = 0;
     loop {
         // File with index
-        for j in 0..(disk_map[i*2].parse::<i32>().unwrap()) {
+        for _ in 0..(disk_map[i*2].parse::<i32>().unwrap()) {
             disk.push(i as i32);
         }
         if i*2+1 >= disk_map.len() {
             break;
         }
         // Free space on disk
-        for j in 0..(disk_map[i*2+1].parse::<i32>().unwrap()) {
+        for _ in 0..(disk_map[i*2+1].parse::<i32>().unwrap()) {
             disk.push(-1);
         }
 
@@ -49,7 +49,7 @@ pub fn solve(filename: String) {
             while disk1[tail] == -1 && tail > 0 {
                 tail -= 1;
             }
-            if (head < tail) {
+            if head < tail {
                 disk1[head] = disk1[tail];
                 disk1[tail] = -1;
             }
