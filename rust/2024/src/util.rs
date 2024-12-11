@@ -1,6 +1,7 @@
 use std::{env, fs::read_to_string, hash::Hash};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+use std::str::FromStr;
 
 pub fn run_for_inputs(code_filename: &str, solve: fn(String)) {
     let arg = suffix_arg();
@@ -57,6 +58,10 @@ pub fn count<T: Eq + Hash>(map: &mut HashMap<T, i32>, key: T) {
 
 pub fn to_grid(lines: &Vec<String>) -> Vec<Vec<String>> {
     lines.into_iter().map(|s| s.chars().map(|c| c.to_string()).collect()).collect()
+}
+
+pub fn to_grid_typed<T: FromStr>(lines: &Vec<String>) -> Vec<Vec<T>> where <T as FromStr>::Err: std::fmt::Debug {
+    lines.into_iter().map(|s| s.chars().map(|c| c.to_string().parse::<T>().unwrap()).collect()).collect()
 }
 
 pub fn grid_get(grid: &Vec<Vec<String>>, y: i32, x: i32) -> Option<&String> {
