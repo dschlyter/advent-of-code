@@ -82,6 +82,25 @@ pub fn grid_mapped_by_cell<'a>(grid: &'a Vec<Vec<String>>, ignore: &HashSet<Stri
     ret
 }
 
+// Point types
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PointF {
+    pub x: f64,
+    pub y: f64
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Point {
+    pub x: i64,
+    pub y: i64
+}
+
+impl Point {
+    pub fn to_f(&self) -> PointF {
+        return PointF { x: self.x as f64, y: self.y as f64 }
+    }
+}
 
 
 // ignore unused
