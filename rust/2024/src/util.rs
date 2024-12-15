@@ -56,7 +56,9 @@ pub fn count<T: Eq + Hash>(map: &mut HashMap<T, i32>, key: T) {
 
 // Grid utils
 
-pub fn to_grid(lines: &Vec<String>) -> Vec<Vec<String>> {
+pub type Grid = Vec<Vec<String>>;
+
+pub fn to_grid(lines: &Vec<String>) -> Grid {
     lines.into_iter().map(|s| s.chars().map(|c| c.to_string()).collect()).collect()
 }
 
@@ -64,11 +66,11 @@ pub fn to_grid_typed<T: FromStr>(lines: &Vec<String>) -> Vec<Vec<T>> where <T as
     lines.into_iter().map(|s| s.chars().map(|c| c.to_string().parse::<T>().unwrap()).collect()).collect()
 }
 
-pub fn grid_get(grid: &Vec<Vec<String>>, y: i32, x: i32) -> Option<&String> {
+pub fn grid_get(grid: &Grid, y: i32, x: i32) -> Option<&String> {
     return grid.get(y as usize).and_then(|line| line.get(x as usize));
 }
 
-pub fn grid_mapped_by_cell<'a>(grid: &'a Vec<Vec<String>>, ignore: &HashSet<String>) -> HashMap<&'a String, Vec<(i32, i32)>> {
+pub fn grid_mapped_by_cell<'a>(grid: &'a Grid, ignore: &HashSet<String>) -> HashMap<&'a String, Vec<(i32, i32)>> {
     let mut ret = HashMap::new();
 
     for (y, row) in grid.iter().enumerate() {
@@ -80,6 +82,23 @@ pub fn grid_mapped_by_cell<'a>(grid: &'a Vec<Vec<String>>, ignore: &HashSet<Stri
     }
     
     ret
+}
+
+pub fn print_grid_with_player(grid: &Grid, y: usize, x: usize, symbol: &String) {
+    let overlay: HashMap<_, _> = vec![((y, x), symbol.clone())].into_iter().collect();
+    print_grid(grid, &overlay);
+
+}
+
+pub fn print_grid(grid: &Grid, overlay: &HashMap<(usize, usize), String>) {
+    for (y, _) in grid.iter().enumerate() {
+        for (x, cell) in grid[y].iter().enumerate() {
+            let value = overlay.get(&(y, x)).unwrap_or(cell);
+            print!("{}", &value);
+        }
+        println!();
+    }
+
 }
 
 // Point types
