@@ -121,6 +121,11 @@ impl Point {
     }
 }
 
+use std::ops::Add;
+
+pub fn pair_add<T: Add<Output = T>>(p1: (T, T), p2: (T, T)) -> (T, T) {
+    (p1.0 + p2.0, p1.1 + p2.1)
+}
 
 // ignore unused
 // #[allow(dead_code)]
