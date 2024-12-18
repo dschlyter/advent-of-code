@@ -54,7 +54,7 @@ pub fn solve(filename: String) {
     };
     println!("{}", part1_answer);
 
-    // Part 2 - solve the equation system
+    // Part 2
     let part2_answer = {
         let mut pos = (robot.0, robot.1 * 2);
         let mut big_map: Vec<Vec<String>> = map.iter().map(|row| row.iter().flat_map(|cell| {

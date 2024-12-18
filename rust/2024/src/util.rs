@@ -49,6 +49,12 @@ pub fn read_lines(filename: &str) -> Vec<String> {
         .collect()
 }
 
+pub fn read_lines_split(filename: &str) -> (Vec<String>, Vec<String>) {
+    let lines = read_lines(filename);
+    let mut input_parts: Vec<Vec<String>> = lines.split(|line| line.is_empty()).map(|slice| slice.to_vec()).collect();
+    (input_parts.remove(0), input_parts.remove(0))
+}
+
 pub fn count<T: Eq + Hash>(map: &mut HashMap<T, i32>, key: T) {
     let counter = map.entry(key).or_insert(0);
     *counter += 1;

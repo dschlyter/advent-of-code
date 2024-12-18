@@ -56,7 +56,7 @@ pub fn solve(filename: String) {
     };
     println!("{}", part1_answer);
 
-    // Part 2 - solve the equation system
+    // Part 2
     let part2_answer = {
         let mut r2 = robots.clone();
 
