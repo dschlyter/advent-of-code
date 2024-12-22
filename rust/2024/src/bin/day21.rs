@@ -3,6 +3,7 @@
 use core::num;
 use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::cmp::Reverse;
+use std::i64;
 use std::mem::swap;
 use aoc2024::util::{Grid, grid_get};
 use regex::Regex;
@@ -40,8 +41,6 @@ pub fn solve(filename: String) {
             outer_cost.insert((key1.to_string(), key2.to_string()), 1);
         }
     }
-
-    println!("{}:{}: {:?}", file!(), line!(), (cheapest_cost_for(&dirpad, &outer_cost, &"A".to_string(), &"<".to_string())));
 
     // Part 1
     let part1_answer = {
@@ -111,22 +110,22 @@ pub fn cheapest_cost_for(pad: &Grid, cost: &HashMap<(String, String), i64>, star
 
     while let Some((neg_dist, prev_press, pos)) = q.pop() {
         let dist = -neg_dist;
+
+        if dist > 0 && prev_press == "A".to_string() {
+            if &pad[pos.0 as usize][pos.1 as usize] == target {
+                return dist;
+            } else {
+                // Wrong key
+                continue;
+            }
+        }
         if !seen.insert((prev_press.to_string(), pos)) {
             continue;
         }
 
         for press in vec!["^", "<", ">", "v", "A"] {
             if let Some(new_pos) = press_key_pad(pad, pos, &press.to_string()) {
-                let next_key = &pad[new_pos.0 as usize][new_pos.1 as usize];
                 let new_dist = dist + cost[&(prev_press.to_string(), press.to_string())];
-                if press == "A" {
-                    if next_key == target {
-                        return new_dist;
-                    } else {
-                        // Wrong key
-                        continue;
-                    }
-                }
                 q.push((-new_dist, press.to_string(), new_pos));
             }
         }
