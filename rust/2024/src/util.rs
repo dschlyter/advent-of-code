@@ -90,6 +90,11 @@ pub fn grid_mapped_by_cell<'a>(grid: &'a Grid, ignore: &HashSet<String>) -> Hash
     ret
 }
 
+pub fn grid_find_cell(grid: &Grid, target: &String) -> (i32, i32) {
+    let mapped = grid_mapped_by_cell(grid, &HashSet::new());
+    return mapped[target][0];
+}
+
 pub fn print_grid_with_player(grid: &Grid, y: usize, x: usize, symbol: &String) {
     let overlay: HashMap<_, _> = vec![((y, x), symbol.clone())].into_iter().collect();
     print_grid(grid, &overlay);
