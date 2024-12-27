@@ -53,15 +53,18 @@ pub fn solve(filename: String) {
     println!("{}", part1_answer);
 
     // Part 2
-    // 30 seconds runtime
+    // 2s runtime after some opts - 30 seconds runtime originally
     // Very messy and iterative process :(
     let part2_answer = {
         if filename.contains("_test") {
             println!("{}:{}: {:?}", file!(), line!(), ("Skipping part 2 - not defined for tests"));
             return;
         }
-
         inspect_to(5, &gates);
+
+        // Idea:
+        // Start testing the lowest gates with low numbers and fix them, then build up towards a full solution
+        // Assuming that every "bad bit" in a addition can be fixed with a single swap
 
         let mut ans = Vec::new();
         let gate_labels: HashSet<String> = gates.keys().cloned().collect();
@@ -72,17 +75,31 @@ pub fn solve(filename: String) {
                 println!("{} - all good!", offset);
                 continue;
             }
-            println!("{} swapping...", offset);
-            // let bad_gate_children = Hash
+
+            // Opt - one of the swapped nodes must be a child of the bad output gate - makes no sense to swap two unrelated gates
+            // Also assume that all gates involved with previous bits are good and valid
+            let mut bad_gate_children = HashSet::new();
+            child_node_set(z_labels().iter().nth(offset).unwrap(), &gates, &mut bad_gate_children);
+            if offset > 0 {
+                let mut good_gate_children = HashSet::new();
+                child_node_set(z_labels().iter().nth(offset - 1).unwrap(), &gates, &mut good_gate_children);
+                bad_gate_children.retain(|c| !good_gate_children.contains(c));
+            }
+            println!("{} swapping... with {} bad gates", offset, bad_gate_children.len());
 
             for key1 in &gate_labels {
-                println!(" > {}", key1);
+                // println!(" > {}", key1);
                 for key2 in &gate_labels {
                     if key1 >= key2 {
                         continue;
                     }
+                    if !bad_gate_children.contains(key1) && !bad_gate_children.contains(key2) {
+                        continue;
+                    }
 
                     swap_keys(&mut gates2, key1, key2);
+                    // Check some basic invariants on the swap
+                    // This is both an opt for time, and also rules out bad swaps that might accidentally work for lower numbers
                     if check_validity(offset, &gates2) {
                         let mut valid = true;
                         for recheck in 0..(offset+1) {
