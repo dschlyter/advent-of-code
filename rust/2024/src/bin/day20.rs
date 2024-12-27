@@ -51,7 +51,7 @@ pub fn solve(filename: String) {
     };
     println!("{}", part1_answer);
 
-    // Part 2 - Slow brute force 24.7 seconds
+    // Part 2
     let part2_answer = {
         let cheat_dist = 20;
         let mut ans = 0;

@@ -16,6 +16,7 @@ pub fn main() {
 }
 
 type Int = i64;
+const MAX_GATE: usize = 45;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Gate {
@@ -44,7 +45,7 @@ pub fn solve(filename: String) {
             let pos = 63 - i;
             let key = "z".to_string() + (if pos < 10 {"0"} else {""}) + &pos.to_string();
             if gates.contains_key(&key) {
-                ans = ans << 1 | eval(&key, &gates, &wires, &mut HashSet::new());
+                ans = ans << 1 | eval(&key, &gates, &wires, &mut HashMap::new());
             }
         }
         ans
@@ -52,139 +53,159 @@ pub fn solve(filename: String) {
     println!("{}", part1_answer);
 
     // Part 2
+    // 30 seconds runtime
+    // Very messy and iterative process :(
     let part2_answer = {
         if filename.contains("_test") {
             println!("{}:{}: {:?}", file!(), line!(), ("Skipping part 2 - not defined for tests"));
             return;
         }
 
-        let mut tests: Vec<Int> = vec![1, 2, 3, 4];
-        loop {
-            let t = *tests.last().unwrap();
-            if t > (1 << 60) {
-                break;
+        inspect_to(5, &gates);
+
+        let mut ans = Vec::new();
+        let gate_labels: HashSet<String> = gates.keys().cloned().collect();
+        let mut gates2 = gates.clone();
+
+        'testing: for offset in 0..(MAX_GATE+1) {
+            if test_n(offset, &gates2) {
+                println!("{} - all good!", offset);
+                continue;
             }
-            tests.push(t + 1 + t/10);
-        }
+            println!("{} swapping...", offset);
+            // let bad_gate_children = Hash
 
-
-        let mut fixed_gates = gates.clone();
-        'testing: for t in &tests {
-            let r = run(*t, *t, &gates);
-            if r == t + t {
-                println!("{}:{}: {:?}", file!(), line!(), (t, "is OK!"));
-            } else {
-                println!("{}:{}: {:?}", file!(), line!(), (t, "did not equal", t+t, "but", r));
-
-                let diffing_bits = r ^ (t + t);
-                println!("Diffing bits {:b}", diffing_bits);
-                let mut problem_wires = HashSet::new();
-                for i in 0..64 {
-                    if (diffing_bits >> i) % 2 == 0 {
+            for key1 in &gate_labels {
+                println!(" > {}", key1);
+                for key2 in &gate_labels {
+                    if key1 >= key2 {
                         continue;
                     }
 
-                    let key = "z".to_string() + (if i < 10 {"0"} else {""}) + &i.to_string();
-                    if gates.contains_key(&key) {
-                        let mut nodes = HashSet::new();
-                        child_node_set(&key, &fixed_gates, &wires, &mut HashSet::new(), &mut nodes);
-                        problem_wires.extend(nodes.into_iter());
-                    }
-                }
-                println!("{}:{}: {:?}", file!(), line!(), ("Suspected nodes", &problem_wires));
-
-
-                for key1 in &problem_wires {
-                    for key2 in &problem_wires {
-                        if key1 >= key2 {
-                            continue;
-                        }
-                        println!("{}:{}: {:?}", file!(), line!(), ("Swapping", key1, key2));
-
-                        swap_keys(&mut fixed_gates, key1, key2);
-                        let mut good_swap = true;
-                        for t2 in &tests {
-                            if t2 > t {
-                                break;
-                            }
-                            if run(*t2, *t2, &fixed_gates) != t2 + t2 {
-                                good_swap = false;
+                    swap_keys(&mut gates2, key1, key2);
+                    if check_validity(offset, &gates2) {
+                        let mut valid = true;
+                        for recheck in 0..(offset+1) {
+                            if !test_n(offset - recheck, &gates2) {
+                                valid = false;
                                 break;
                             }
                         }
-                        if good_swap {
-                            println!("{}:{}: {:?}", file!(), line!(), ("Good swap found"));
+                        if valid {
+                            println!("Found swap for {} and {}", &key1, &key2);
+                            ans.push(key1.clone());
+                            ans.push(key2.clone());
                             continue 'testing;
                         }
-                        // Restore the swap and try another
-                        swap_keys(&mut fixed_gates, key1, key2);
                     }
+                    swap_keys(&mut gates2, key1, key2);
                 }
-                panic!("A single swap did not fix the issue for this candidate")
             }
+
+            panic!("No good swaps found!")
         }
 
-        // Simple verification
-        for &t in &tests {
-            println!("{}:{}: {:?}", file!(), line!(), (t, run(t, t, &fixed_gates) == t + t));
-        }
-        0
+        ans.sort();
+        ans.join(",")
     };
     println!("{}", part2_answer);
 }
 
-fn eval(arg: &String, gates: &HashMap<String, Gate>, wires: &HashMap<String, i64>, seen: &mut HashSet<String>) -> i64 {
-    // Terminating on loops - instead of tracking visited keys check if depth has exceeded the number of nodes 
-    if seen.contains(arg) {
-        return -1;
+fn test_n(offset: usize, gates: &HashMap<String, Gate>) -> bool {
+    let test = 1 << offset;
+    let t1 = test - 1;
+    let t2 = 1;
+    return run(t1, t2, &gates) == t1 + t2;
+}
+
+fn z_labels() -> Vec<String> {
+    let mut ret = Vec::new();
+    for i in 0..(MAX_GATE+1) {
+        ret.push("z".to_string() + (if i < 10 {"0"} else {""}) + &i.to_string());
+    }
+    ret
+}
+
+fn check_validity(offset: usize, gates: &HashMap<String, Gate>) -> bool {
+    let zl: Vec<_> = z_labels().into_iter().take(offset+1).collect();
+
+    // Invariant 1 - every top-level is an XOR
+    for l in &zl {
+        if gates[l].op != "XOR" {
+            return false;
+        }
     }
 
-    if let Some(v) = wires.get(arg) {
+    // Invariant 2 - z(N) should not depend on z(N+1)
+    for (i, l) in zl.iter().enumerate() {
+        let m = max_input(l, &gates, &mut HashSet::new());
+        if m > i as i64 {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn eval(wire: &String, gates: &HashMap<String, Gate>, inputs: &HashMap<String, i64>, mem: &mut HashMap<String, i64>) -> i64 {
+    // Terminating on loops - instead of tracking visited keys check if depth has exceeded the number of nodes 
+    if let Some(x) = mem.get(wire) {
+        return *x;
+    }
+
+    if let Some(v) = inputs.get(wire) {
         return *v;
     }
 
-    if let Some(gate) = gates.get(arg) {
-        seen.insert(arg.to_string());
-        let l = eval(&gate.left, gates, wires, seen);
-        let r = eval(&gate.right, gates, wires, seen);
-        seen.remove(&arg.to_string());
+    if let Some(gate) = gates.get(wire) {
+        // If we enounter this wire again before resolving it, then we have a loop and return -1
+        mem.insert(wire.to_string(), -1);
+
+        let l = eval(&gate.left, gates, inputs, mem);
+        let r = eval(&gate.right, gates, inputs, mem);
         if l == -1 || r == -1 {
             return -1;
         }
-        return match gate.op.as_str() {
+        let res = match gate.op.as_str() {
             "AND" => l & r,
             "OR" => l | r,
             "XOR" => l ^ r,
             _ => panic!("Op {} not found", gate.op)
-        }
+        };
+
+        mem.insert(wire.to_string(), res);
+        return res;
     }
     
-    panic!("Arg {} not found", arg)
+    panic!("Arg {} not found", wire)
 }
 
-fn child_node_set(arg: &String, gates: &HashMap<String, Gate>, wires: &HashMap<String, i64>, seen: &mut HashSet<String>, child_set: &mut HashSet<String>) {
-    // Terminating on loops - instead of tracking visited keys check if depth has exceeded the number of nodes 
-    if seen.contains(arg) {
-        return;
+fn max_input(wire: &String, gates: &HashMap<String, Gate>, seen: &mut HashSet<String>) -> i64 {
+    // Loop detected
+    if seen.contains(wire) {
+        return 9000;
     }
 
-    if let Some(v) = wires.get(arg) {
-        return;
+    if wire.starts_with("x") || wire.starts_with("y") {
+        return wire[1..].parse::<i64>().unwrap();
     }
 
-    if let Some(gate) = gates.get(arg) {
-        // Only consider gates
-        // TODO good enough ??
-        child_set.insert(arg.to_string());
-
-        seen.insert(arg.to_string());
-        let l = child_node_set(&gate.left, gates, wires, seen, child_set);
-        let r = child_node_set(&gate.right, gates, wires, seen, child_set);
-        seen.remove(&arg.to_string());
-        return;
+    if let Some(gate) = gates.get(wire) {
+        seen.insert(wire.to_string());
+        let l = max_input(&gate.left, gates, seen);
+        let r = max_input(&gate.right, gates, seen);
+        seen.remove(wire);
+        return l.max(r);
     }
-    
-    panic!("Arg {} not found", arg)
+    -1
+}
+
+fn child_node_set(wire: &String, gates: &HashMap<String, Gate>, children: &mut HashSet<String>) {
+    if let Some(gate) = gates.get(wire) {
+        children.insert(wire.to_string());
+        child_node_set(&gate.left, gates, children);
+        child_node_set(&gate.right, gates, children);
+    }
 }
 
 fn run(x: Int, y: Int, gates: &HashMap<String, Gate>) -> i64 {
@@ -205,7 +226,7 @@ fn run(x: Int, y: Int, gates: &HashMap<String, Gate>) -> i64 {
         let pos = 63 - i;
         let key = "z".to_string() + (if pos < 10 {"0"} else {""}) + &pos.to_string();
         if gates.contains_key(&key) {
-            let res = eval(&key, &gates, &wires, &mut HashSet::new());
+            let res = eval(&key, &gates, &wires, &mut HashMap::new());
             if res == -1 {
                 return -1;
             }
@@ -219,6 +240,15 @@ fn swap_keys(gates: &mut HashMap<String, Gate>, key1: &String, key2: &String) {
     if let (Some(gate1), Some(gate2)) = (gates.remove(key1), gates.remove(key2)) {
         gates.insert(key1.clone(), gate2);
         gates.insert(key2.clone(), gate1);
+    }
+}
+
+fn inspect_to(offset: usize, gates: &HashMap<String, Gate>) {
+    for pos in 0..(offset+1) {
+        let key = "z".to_string() + (if pos < 10 {"0"} else {""}) + &pos.to_string();
+        if gates.contains_key(&key) {
+            inspect(&"".to_string(), &key, &gates);
+        }
     }
 }
 
