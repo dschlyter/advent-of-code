@@ -8,26 +8,29 @@
 set -e
 
 # change this each year
-curr_year="2024"
-file_ending="rs"
-file_prefix="src/bin/"
+curr_year="2025"
+file_ending="py"
+file_prefix=""
 
 curr_date="$(date '+%-d')"
 date="${1:-$curr_date}"
 cookie="$(cat $HOME/.secrets/advent-cookie)"
 
+input_file="input/day${date}.txt"
 curl "https://adventofcode.com/$curr_year/day/$date/input" \
     -H 'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8' \
     -H 'accept-encoding: gzip, deflate, br' \
     -H 'accept-language: en-US,en;q=0.9,sv-SE;q=0.8,sv;q=0.7,nb;q=0.6' \
     -H "cookie: $cookie" \
     --compressed \
-    > "input/day${date}.txt"
+    > "$input_file"
 
-echo Fecthed "input/day${date}.txt"
+echo Fetched "$input_file ($(cat "$input_file" | wc -l) lines)"
+cat "$input_file" | head -n 10 | cut -c -80
 
-cat input/day$date.txt | head -n 20
+# Assume first code block is test data - may need manual updates
 
+curl "https://adventofcode.com/$curr_year/day/$date" | python3 -c "import re,sys;print('\n'.join(l for l in re.search(r'<pre><code[^>]*>(.*?)</code></pre>',sys.stdin.read(),re.S).group(1).splitlines()))" > "input/day${date}_test.txt" || true
 
 ydate=$((date - 1))
 old_file="${file_prefix}day$ydate.${file_ending}"
