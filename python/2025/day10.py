@@ -1,4 +1,5 @@
 import queue
+import math
 import util
 import sys
 from collections import defaultdict 
@@ -71,6 +72,7 @@ def p2(lines):
     for m in my_machines:
         lights, buttons, joltage = m
 
+        # debug: button count
         cnt = dict()
         for b in buttons:
             for bi in b:
@@ -82,49 +84,57 @@ def p2(lines):
         print("Sum joltage:", sum(joltage))
         r = dp2(joltage, s_buttons, mem)
         print(r)
+        print(stats)
         if r >= sum(joltage):
             raise Exception("No solution found")
         ans += r
 
     print("Part 2:", ans)
 
+# prev stats for 7 min run:           84070000 [(50, 15), (51, 119), (101, 1), (150, 3), (200, 1778267), (250, 33480419), (300, 33793085), (350, 12289708), (400, 2588374), (450, 138615), (500, 1527), (550, 1)]
+# opted 5:30 run - started thrashing: 75420000 [(50, 3), (51, 119), (101, 1), (200, 21140), (250, 5634902), (300, 36240716), (350, 26646359), (400, 6411382), (450, 456672), (500, 8644), (550, 184)]
+stats = defaultdict(int)
+
 # What are the fewest buttons needed to solve this state
 def dp2(state, buttons, mem):
     if state in mem:
         return mem[state]
 
-    # check which buttons can be pressed without going negative
-    possible_buttons = []
+    valid_state = True
+
+    # establish an upper bound for each key - and the combined number of presses possible
+    upper_bound = []
+    possible_keypresses = [0] * len(state)
     for b in buttons:
-        impossible = False
+        u = 9000
         for bi in b:
-            if state[bi] <= 0:
-                impossible = True
-                break
-        if not impossible:
-            possible_buttons.append(b)
+            u = min(u, state[bi])
+        upper_bound.append(u)
+        for bi in b:
+            possible_keypresses[bi] += u
 
-    # validate that every non-zero state has one possible button
-    possible_states = {s for b in possible_buttons for s in b}
+    # state is invalid if combined upper bounds targeting a state is less than that state
     for i, s in enumerate(state):
-        if s > 0 and i not in possible_states:
-            mem[state] = 9000
-            return mem[state]
+        if s > possible_keypresses[i]:
+            valid_state = False 
 
-    # make sure to solve the smallest state first - since that is most likely lead to eliminations
     best = 9000
-    smallest_index = sorted([(s, i) for i, s in enumerate(state) if s > 0])[0][1]
-    for b in possible_buttons:
-        if smallest_index not in b:
-            continue
-        new_state = list(state)
-        for bi in b:
-            new_state[bi] -= 1
-        best = min(best, 1 + dp2(tuple(new_state), buttons, mem))
+
+    if valid_state:
+        # make sure to solve the smallest state first - since that is most likely lead to eliminations
+        smallest_index = sorted([(s, i) for i, s in enumerate(state) if s > 0])[0][1]
+        for i, b in enumerate(buttons):
+            if upper_bound[i] == 0 or smallest_index not in b:
+                continue
+            new_state = list(state)
+            for bi in b:
+                new_state[bi] -= 1
+            best = min(best, 1 + dp2(tuple(new_state), buttons, mem))
 
     mem[state] = best
+    stats[math.ceil(sum(state) / 50) * 50 + (1 if best < 9000 else 0)] += 1
     if len(mem) % 10000 == 0:
-        print("Mem size:", len(mem), "Best solve:", max(sum(k) for k, v in mem.items() if v < 9000))
+        print("Mem size:", len(mem), sorted(stats.items()))
     return mem[state]
 
 def main():
@@ -134,7 +144,7 @@ def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "1":
             run(TEST)
-        elif sys.argv[1] == "1":
+        elif sys.argv[1] == "2":
             run(MAIN)
         else:
             run(sys.argv[1])
