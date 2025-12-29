@@ -8,6 +8,8 @@ from operator import add, mul
 
 from util import get
 
+from ortools.sat.python import cp_model
+
 sys.setrecursionlimit(1_000_000)
 
 def parse(lines):
@@ -26,6 +28,7 @@ def parse(lines):
     return ret
 
 def p1(lines):
+    print("Part 1")
     ans = 0
 
     my_machines = parse(lines)
@@ -72,70 +75,32 @@ def p2(lines):
     for m in my_machines:
         lights, buttons, joltage = m
 
-        # debug: button count
-        cnt = dict()
-        for b in buttons:
-            for bi in b:
-                cnt[bi] = cnt.get(bi, 0) + 1
-        print(sorted(cnt.items()))
+        model = cp_model.CpModel()
 
-        mem = {tuple([0]*len(joltage)): 0}
-        s_buttons = sorted(buttons, key=lambda b: (b[0], -len(b)))
-        print("Sum joltage:", sum(joltage))
-        r = dp2(joltage, s_buttons, mem)
-        print(r)
-        print(stats)
-        if r >= sum(joltage):
-            raise Exception("No solution found")
-        ans += r
+        model_vars = []
+        for i, b in enumerate(buttons):
+            mv = model.NewIntVar(0, max(joltage), "b" + str(i))
+            model_vars.append(mv)
+
+        for joltage_i, j in enumerate(joltage):
+            model.Add(sum(model_vars[bi] for bi, button in enumerate(buttons) if joltage_i in button) == j)
+
+        # model.Minimize(reduce(lambda a, b: a + b, model_vars))
+        model.Minimize(sum(model_vars))
+
+        solver = cp_model.CpSolver()
+        status = solver.Solve(model)
+        if status == cp_model.OPTIMAL:
+            # for mv in model_vars:
+                # print(mv, solver.Value(mv))
+            presses = sum(solver.Value(mv) for mv in model_vars)
+            print(presses)
+            ans += presses
+        else:
+            print("Non optimal :(")
 
     print("Part 2:", ans)
 
-# prev stats for 7 min run:           84070000 [(50, 15), (51, 119), (101, 1), (150, 3), (200, 1778267), (250, 33480419), (300, 33793085), (350, 12289708), (400, 2588374), (450, 138615), (500, 1527), (550, 1)]
-# opted 5:30 run - started thrashing: 75420000 [(50, 3), (51, 119), (101, 1), (200, 21140), (250, 5634902), (300, 36240716), (350, 26646359), (400, 6411382), (450, 456672), (500, 8644), (550, 184)]
-stats = defaultdict(int)
-
-# What are the fewest buttons needed to solve this state
-def dp2(state, buttons, mem):
-    if state in mem:
-        return mem[state]
-
-    valid_state = True
-
-    # establish an upper bound for each key - and the combined number of presses possible
-    upper_bound = []
-    possible_keypresses = [0] * len(state)
-    for b in buttons:
-        u = 9000
-        for bi in b:
-            u = min(u, state[bi])
-        upper_bound.append(u)
-        for bi in b:
-            possible_keypresses[bi] += u
-
-    # state is invalid if combined upper bounds targeting a state is less than that state
-    for i, s in enumerate(state):
-        if s > possible_keypresses[i]:
-            valid_state = False 
-
-    best = 9000
-
-    if valid_state:
-        # make sure to solve the smallest state first - since that is most likely lead to eliminations
-        smallest_index = sorted([(s, i) for i, s in enumerate(state) if s > 0])[0][1]
-        for i, b in enumerate(buttons):
-            if upper_bound[i] == 0 or smallest_index not in b:
-                continue
-            new_state = list(state)
-            for bi in b:
-                new_state[bi] -= 1
-            best = min(best, 1 + dp2(tuple(new_state), buttons, mem))
-
-    mem[state] = best
-    stats[math.ceil(sum(state) / 50) * 50 + (1 if best < 9000 else 0)] += 1
-    if len(mem) % 10000 == 0:
-        print("Mem size:", len(mem), sorted(stats.items()))
-    return mem[state]
 
 def main():
     TEST = "input/day10_test.txt"
